@@ -19,7 +19,7 @@ function loadKeywordPreferences() {
   
   // 获取保存的关键词，如果没有则使用默认关键词
   let savedKeywords = localStorage.getItem('preferredKeywords');
-  let keywords = []; // 默认无关键词
+  let keywords = ['antibody', 'antigen', 'nanobody', 'CDR', 'immunoglobulin']; // 默认抗体/항체 关键词
   
   if (savedKeywords) {
     try {

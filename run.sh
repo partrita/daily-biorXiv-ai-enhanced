@@ -21,10 +21,10 @@ if [ -z "$OPENAI_API_KEY" ]; then
     echo "   export OPENAI_API_KEY=\"your-api-key-here\""
     echo ""
     echo "🔧 可选变量 / Optional variables:"
-    echo "   export OPENAI_BASE_URL=\"https://api.openai.com/v1\"  # API基础URL / API base URL"
-    echo "   export LANGUAGE=\"Chinese\"                           # 语言设置 / Language setting"
-    echo "   export CATEGORIES=\"cs.CV, cs.CL\"                    # 关注分类 / Categories of interest"
-    echo "   export MODEL_NAME=\"gpt-4o-mini\"                     # 模型名称 / Model name"
+    echo "   export OPENAI_BASE_URL=\"https://generativelanguage.googleapis.com/v1beta/openai\"  # API基础URL / API base URL"
+    echo "   export LANGUAGE=\"Korean\"                            # 语言设置 / Language setting"
+    echo "   export CATEGORIES=\"q-bio.BM, q-bio.CB, q-bio.QM\"    # 关注分类 / Categories of interest (e.g. Antibody/Bio)"
+    echo "   export MODEL_NAME=\"gemini-2.5-flash\"                # 模型名称 / Model name"
     echo ""
     echo "💡 设置后重新运行此脚本即可进行完整测试 / After setting, rerun this script for complete testing"
     echo "🚀 或者继续运行部分流程（爬取+去重检查）/ Or continue with partial workflow (crawl + dedup check)"
@@ -40,10 +40,10 @@ else
     PARTIAL_MODE=false
     
     # 设置默认值 / Set default values
-    export LANGUAGE="${LANGUAGE:-Chinese}"
-    export CATEGORIES="${CATEGORIES:-cs.CV, cs.CL}"
-    export MODEL_NAME="${MODEL_NAME:-gpt-4o-mini}"
-    export OPENAI_BASE_URL="${OPENAI_BASE_URL:-https://api.openai.com/v1}"
+    export LANGUAGE="${LANGUAGE:-Korean}"
+    export CATEGORIES="${CATEGORIES:-q-bio.BM, q-bio.CB, q-bio.QM}"
+    export MODEL_NAME="${MODEL_NAME:-gemini-2.5-flash}"
+    export OPENAI_BASE_URL="${OPENAI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}"
     
     echo "🔧 当前配置 / Current configuration:"
     echo "   LANGUAGE: $LANGUAGE"
