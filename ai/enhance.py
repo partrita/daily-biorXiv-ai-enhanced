@@ -36,6 +36,27 @@ def parse_args():
     return parser.parse_args()
 
 
+def make_fallback_ai_fields(raw_summary: str) -> dict:
+    """API 실패 시 초록 본문 문장을 기반으로 구조화 필드 생성 (초록 참조 등의 플레이스홀더 배제)"""
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", raw_summary) if len(s.strip()) > 10]
+    if not sentences:
+        sentences = [raw_summary.strip() or "요약 내용을 불러올 수 없습니다."]
+
+    tldr_val = sentences[0]
+    motivation_val = sentences[1] if len(sentences) > 1 else sentences[0]
+    method_val = sentences[2] if len(sentences) > 2 else (sentences[1] if len(sentences) > 1 else sentences[0])
+    result_val = sentences[3] if len(sentences) > 3 else (sentences[-1] if len(sentences) > 2 else sentences[0])
+    conclusion_val = sentences[-1] if len(sentences) > 4 else (sentences[-1] if len(sentences) > 1 else sentences[0])
+
+    return {
+        "tldr": tldr_val,
+        "motivation": motivation_val,
+        "method": method_val,
+        "result": result_val,
+        "conclusion": conclusion_val,
+    }
+
+
 def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) -> Optional[Dict]:
     def check_github_code(content: str) -> Dict:
         """GitHub 링크 추출 및 검증"""
@@ -84,23 +105,14 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
     if code_info:
         item.update(code_info)
 
-    # 기본 AI 요약 필드 (Quota 소진 시 안전한 fallback)
     raw_summary = item.get("summary", "")
-    snippet = raw_summary[:200] + "..." if len(raw_summary) > 200 else raw_summary
-    default_ai_fields = {
-        "tldr": snippet or "요약이 제공되지 않았습니다.",
-        "motivation": "초록 본문 참조",
-        "method": "초록 본문 참조",
-        "result": "초록 본문 참조",
-        "conclusion": "초록 본문 참조",
-    }
-
+    default_ai_fields = make_fallback_ai_fields(raw_summary)
     paper_id = item.get("id", "unknown")
 
     for attempt in range(max_retries):
         try:
             response: Structure = chain.invoke({
-                "language": language,
+                "language": language or "Korean",
                 "content": item["summary"],
             })
             item["AI"] = response.model_dump()
@@ -137,7 +149,7 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
     if "AI" not in item or not isinstance(item["AI"], dict):
         item["AI"] = default_ai_fields
     for field in default_ai_fields.keys():
-        if field not in item["AI"]:
+        if field not in item["AI"] or not item["AI"][field]:
             item["AI"][field] = default_ai_fields[field]
 
     # AI가 생성한 모든 필드 민감도 확인
@@ -150,15 +162,18 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
 
 def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
     """모든 데이터 항목 처리 (속도 제한 및 지수 백오프 적용)"""
+    base_url = os.environ.get("OPENAI_BASE_URL", "")
+    api_key = os.environ.get("OPENAI_API_KEY", "") or os.environ.get("GEMINI_API_KEY", "")
+    
     llm = ChatOpenAI(
         **build_chat_openai_kwargs(
             model_name=model_name,
-            base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-            api_key=os.environ.get("OPENAI_API_KEY", ""),
+            base_url=base_url,
+            api_key=api_key,
         )
     ).with_structured_output(Structure, method="function_calling")
 
-    print(f"Connect to: {model_name} (Total papers: {len(data)})", file=sys.stderr)
+    print(f"Connect to: {model_name} (Total papers: {len(data)}, Language: {language})", file=sys.stderr)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(system),
@@ -170,7 +185,6 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
     processed_data = [None] * len(data)
     processing_errors = []
 
-    # Quota 절약을 위해 단일 워커로 순차 처리 + 요청 간 1.5초 간격 유지
     if max_workers <= 1:
         for idx, item in enumerate(tqdm(data, desc="Processing papers")):
             try:
@@ -195,7 +209,6 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
                     print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
                     processing_errors.append(str(e))
 
-    # 전체가 실패한 치명적 인증 오류인 경우에만 예외 발생
     if len(processing_errors) == len(data) and len(data) > 0:
         raise_if_processing_failed(processing_errors)
 
@@ -225,7 +238,6 @@ def main():
             seen_ids.add(item["id"])
             unique_data.append(item)
 
-    # 무료 API Quota 보호: 일일 최대 10편으로 제한
     max_daily_limit = int(os.environ.get("MAX_DAILY_PAPERS", "10"))
     if len(unique_data) > max_daily_limit:
         print(f"Limiting papers to latest {max_daily_limit} (from {len(unique_data)}) to save API quota", file=sys.stderr)

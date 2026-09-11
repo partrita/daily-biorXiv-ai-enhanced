@@ -1555,10 +1555,6 @@ function showPaperDetails(paper, paperIndex) {
     githubLink.style.display = 'none';
   }
   // ---------------------------
-
-  // 프롬프트 출처: https://papers.cool/
-  prompt = `이 논문을 읽고 ${paper.url.replace('abs', 'pdf')}, 이 논문이 해결한 문제, 관련 연구, 연구 방법, 수행한 실험 및 결과, 결론을 요약하고, 마지막으로 이 논문의 내용을 종합적으로 요약해 주세요`
-  document.getElementById('kimiChatLink').href = `https://www.kimi.com/_prefill_chat?prefill_prompt=${prompt}&system_prompt=당신은 학술 조수입니다. 이후 대화는 다음 논문 내용을 중심으로 진행되며 링크를 통해 논문 PDF와 FAQ가 제공됩니다. 사용자가 논문 관련 질문을 계속할 것이며 전문적으로 답변해 주세요. 1인칭 표현은 지양하고 개조식 답변 시 마크다운 형식을 권장합니다.&send_immediately=true&force_search=true`;
   
   // 논문 위치 정보 업데이트
   const paperPosition = document.getElementById('paperPosition');

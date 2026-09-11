@@ -1,4 +1,4 @@
-Please analyze the following abstract of papers. 
+다음 논문의 초록(Abstract)을 꼼꼼히 분석하여 한국어로 구조화된 요약을 작성해 주세요:
 
-Content:
+[초록 (Abstract)]
 {content}

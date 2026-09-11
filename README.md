@@ -1,4 +1,4 @@
-# 🚀 daily-arXiv-ai-enhanced
+# 🚀 daily-biorXiv-explained
 
 > [!CAUTION]
 > 귀하가 속한 사법 관할권에서 학술 데이터에 대한 검열 요건이 있는 경우 본 코드를 주의하여 실행하십시오. 2차 배포 버전은 규정 준수 검토(원문 논문 규정 준수 및 AI 규정 준수 포함하되 이에 국한되지 않음) 의무를 이행해야 하며, 그렇지 않을 경우 모든 법적 결과는 다운스트림 사용자가 직접 부담합니다.
@@ -33,7 +33,7 @@ This innovative tool transforms how you stay updated with arXiv papers by combin
 - One-click copy in Settings to export your keywords and authors configuration
 - Seamlessly combine exported preferences with SKILL for reproducible and shareable setups
 
-👉 **[Try it now!](https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/)** - No installation required
+👉 **[Try it now!](https://dw-dengwei.github.io/daily-biorXiv-explained/)** - No installation required
 
 
 
@@ -86,9 +86,9 @@ https://github.com/user-attachments/assets/b25712a4-fb8d-484f-863d-e8da6922f9d7
 ---
 
 ### 5단계: 첫 실행 (Run Workflow)
-1. 저장소 상단의 **Actions 탭 ➡️ `arXiv-daily-ai-enhanced`**를 클릭합니다.
+1. 저장소 상단의 **Actions 탭 ➡️ `biorXiv-daily-explained`**를 클릭합니다.
 2. 우측의 **Run workflow** 드롭다운을 열고 버튼을 누릅니다.
-3. 워크플로우가 완료되면 `https://<username>.github.io/daily-arXiv-ai-enhanced/`에서 나만의 논문 큐레이션 웹페이지를 확인할 수 있습니다. (이후 매일 지정된 시간에 자동 실행됩니다)
+3. 워크플로우가 완료되면 `https://<username>.github.io/daily-biorXiv-explained/`에서 나만의 논문 큐레이션 웹페이지를 확인할 수 있습니다. (이후 매일 지정된 시간에 자동 실행됩니다)
 
 # Contributors
 Thanks to the following special contributors for contributing code, discovering bugs, and sharing useful ideas for this project!!!
@@ -163,7 +163,7 @@ We sincerely thank the following individuals and organizations for their promoti
 
 # Star history
 
-[![Stargazers over time](https://starchart.cc/dw-dengwei/daily-arXiv-ai-enhanced.svg?variant=adaptive)](https://starchart.cc/dw-dengwei/daily-arXiv-ai-enhanced)
+[![Stargazers over time](https://starchart.cc/dw-dengwei/daily-biorXiv-explained.svg?variant=adaptive)](https://starchart.cc/dw-dengwei/daily-biorXiv-explained)
 
 # Buy me a coffee
 [here](./buy-me-a-coffee/README.md)

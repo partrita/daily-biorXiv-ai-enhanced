@@ -5,9 +5,16 @@ from urllib.parse import urlparse
 
 def build_chat_openai_kwargs(model_name: str, base_url: str, api_key: str) -> dict:
     """Build provider-safe ChatOpenAI settings from workflow configuration."""
-    model_name = model_name.strip()
-    base_url = base_url.strip().rstrip("/")
-    api_key = api_key.strip()
+    model_name = (model_name or "gemini-3.7-flash").strip()
+    api_key = (api_key or "").strip()
+    base_url = (base_url or "").strip().rstrip("/")
+
+    # base_url이 명시되지 않았거나 비어있는 경우 Gemini 또는 OpenAI로 자동 설정
+    if not base_url:
+        if model_name.startswith("gemini") or api_key.startswith("AIza"):
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
+        else:
+            base_url = "https://api.openai.com/v1"
 
     missing = [
         name
