@@ -62,7 +62,7 @@ https://github.com/user-attachments/assets/b25712a4-fb8d-484f-863d-e8da6922f9d7
 | :--- | :---: | :--- |
 | **`CATEGORIES`** | **필수** | **수집할 검색 키워드 목록 (쉼표 `,`로 구분)**<br>• 예시: `de novo design, antibody design, protein design`<br>• 따옴표 없이 입력하며, 각 키워드별 bioRxiv 최신 논문이 수집됩니다. |
 | **`LANGUAGE`** | **필수** | **AI 요약 언어**<br>• 기본값: `Korean` (또는 `English` 등) |
-| **`MODEL_NAME`** | **필수** | **사용할 LLM 모델명**<br>• 예시: `gemini-2.5-flash` (또는 `deepseek-chat`, `gpt-4o-mini`) |
+| **`MODEL_NAME`** | **필수** | **사용할 LLM 모델명**<br>• 예시: `gemini-3.7-flash` (또는 `deepseek-chat`, `gpt-4o-mini`) |
 | **`EMAIL`** | **필수** | **GitHub Actions 커밋용 이메일** (예: `your-email@example.com`) |
 | **`NAME`** | **필수** | **GitHub Actions 커밋용 이름** (예: `your-github-username`) |
 

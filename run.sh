@@ -23,8 +23,8 @@ if [ -z "$OPENAI_API_KEY" ]; then
     echo "🔧 선택 변수 / Optional variables:"
     echo "   export OPENAI_BASE_URL=\"https://generativelanguage.googleapis.com/v1beta/openai\"  # API 기본 URL / API base URL"
     echo "   export LANGUAGE=\"Korean\"                            # 언어 설정 / Language setting"
-    echo "   export CATEGORIES=\"q-bio.BM, q-bio.CB, q-bio.QM\"    # 관심 카테고리 / Categories of interest"
-    echo "   export MODEL_NAME=\"gemini-2.5-flash\"                # 모델 이름 / Model name"
+    echo "   export CATEGORIES=\"de novo design, antibody design\"    # 관심 카테고리 / Categories of interest"
+    echo "   export MODEL_NAME=\"gemini-3.7-flash\"                # 모델 이름 / Model name"
     echo ""
     echo "💡 설정 후 이 스크립트를 다시 실행하여 전체 테스트를 진행하세요 / After setting, rerun this script for complete testing"
     echo "🚀 또는 일부 프로세스(크롤링 + 중복 확인)만 계속 실행합니다 / Or continue with partial workflow (crawl + dedup check)"
@@ -41,8 +41,8 @@ else
     
     # 기본값 설정 / Set default values
     export LANGUAGE="${LANGUAGE:-Korean}"
-    export CATEGORIES="${CATEGORIES:-q-bio.BM, q-bio.CB, q-bio.QM}"
-    export MODEL_NAME="${MODEL_NAME:-gemini-2.5-flash}"
+    export CATEGORIES="${CATEGORIES:-de novo design, antibody design}"
+    export MODEL_NAME="${MODEL_NAME:-gemini-3.7-flash}"
     export OPENAI_BASE_URL="${OPENAI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}"
     
     echo "🔧 현재 설정 / Current configuration:"

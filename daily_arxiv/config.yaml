@@ -5,4 +5,4 @@ biorxiv:
     - "bioRxiv"
 
 llm:
-  model_name: "gemini-2.5-flash"  # 사용할 LLM 모델
+  model_name: "gemini-3.7-flash"  # 사용할 LLM 모델
