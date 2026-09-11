@@ -2,10 +2,11 @@ import os
 import json
 import sys
 import re
+import time
+import random
+import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict
-from queue import Queue
-from threading import Lock
+from typing import List, Dict, Optional
 import dotenv
 import argparse
 from tqdm import tqdm
@@ -21,10 +22,11 @@ from structure import Structure
 from content_filter import is_sensitive
 from runtime import build_chat_openai_kwargs, raise_if_processing_failed
 
-if os.path.exists('.env'):
+if os.path.exists(".env"):
     dotenv.load_dotenv()
-template = open("template.txt", "r").read()
-system = open("system.txt", "r").read()
+template = open("template.txt", "r", encoding="utf-8").read()
+system = open("system.txt", "r", encoding="utf-8").read()
+
 
 def parse_args():
     """명령줄 인수 파싱"""
@@ -33,7 +35,8 @@ def parse_args():
     parser.add_argument("--max_workers", type=int, default=1, help="Maximum number of parallel workers")
     return parser.parse_args()
 
-def process_single_item(chain, item: Dict, language: str) -> Dict:
+
+def process_single_item(chain, item: Dict, language: str, max_retries: int = 5) -> Optional[Dict]:
     def check_github_code(content: str) -> Dict:
         """GitHub 링크 추출 및 검증"""
         code_info = {}
@@ -41,21 +44,18 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
         # 1. github.com/owner/repo 형식 우선 매칭
         github_pattern = r"https?://github\.com/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_\.]+)"
         match = re.search(github_pattern, content)
-        
+
         if match:
             owner, repo = match.groups()
-            # repo 이름 정리, 끝의 .git 확장자나 문장 부호 제거
             repo = repo.rstrip(".git").rstrip(".,)")
-            
             full_url = f"https://github.com/{owner}/{repo}"
             code_info["code_url"] = full_url
-            
-            # GitHub API를 호출하여 정보 가져오기 시도
+
             github_token = os.environ.get("TOKEN_GITHUB")
             headers = {"Accept": "application/vnd.github.v3+json"}
             if github_token:
                 headers["Authorization"] = f"token {github_token}"
-            
+
             try:
                 api_url = f"https://api.github.com/repos/{owner}/{repo}"
                 resp = requests.get(api_url, headers=headers, timeout=5)
@@ -64,21 +64,17 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
                     code_info["code_stars"] = data.get("stargazers_count", 0)
                     code_info["code_last_update"] = data.get("pushed_at", "")[:10]
             except Exception:
-                # API 호출 실패가 메인 흐름에 영향을 주지 않음
                 pass
             return code_info
 
         # 2. github.com이 없으면 github.io 매칭 시도
         github_io_pattern = r"https?://[a-zA-Z0-9-_]+\.github\.io(?:/[a-zA-Z0-9-_\.]+)*"
         match_io = re.search(github_io_pattern, content)
-        
+
         if match_io:
-            url = match_io.group(0)
-            # 끝 문장 부호 정리
-            url = url.rstrip(".,)")
+            url = match_io.group(0).rstrip(".,)")
             code_info["code_url"] = url
-            # github.io는 star 수 및 업데이트 확인 미수행
-                
+
         return code_info
 
     # summary 필드 민감도 확인
@@ -90,58 +86,75 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
     if code_info:
         item.update(code_info)
 
-    """단일 데이터 항목 처리"""
-    # Default structure with meaningful fallback values
+    # 기본 AI 요약 필드 (장애 시 fallback용)
+    raw_summary = item.get("summary", "")
+    snippet = raw_summary[:200] + "..." if len(raw_summary) > 200 else raw_summary
     default_ai_fields = {
-        "tldr": "Summary generation failed",
-        "motivation": "Motivation analysis unavailable",
-        "method": "Method extraction failed",
-        "result": "Result analysis unavailable",
-        "conclusion": "Conclusion extraction failed"
+        "tldr": snippet or "요약이 제공되지 않았습니다.",
+        "motivation": "초록 참조",
+        "method": "초록 참조",
+        "result": "초록 참조",
+        "conclusion": "초록 참조",
     }
-    
-    try:
-        response: Structure = chain.invoke({
-            "language": language,
-            "content": item['summary']
-        })
-        item['AI'] = response.model_dump()
-    except langchain_core.exceptions.OutputParserException as e:
-        # 오류 메시지에서 JSON 문자열을 추출하여 복구 시도
-        error_msg = str(e)
-        partial_data = {}
-        
-        if "Function Structure arguments:" in error_msg:
-            try:
-                # JSON 문자열 추출
-                json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split('are not valid JSON')[0].strip()
-                # LaTeX 수학 기호 전처리 - 올바른 이스케이프 보장
-                json_str = json_str.replace('\\', '\\\\')
-                # 파싱된 JSON 시도
-                partial_data = json.loads(json_str)
-            except Exception as json_e:
-                print(f"Failed to parse JSON for {item.get('id', 'unknown')}: {json_e}", file=sys.stderr)
-        
-        # Merge partial data with defaults to ensure all fields exist
-        item['AI'] = {**default_ai_fields, **partial_data}
-        print(f"Using partial AI data for {item.get('id', 'unknown')}: {list(partial_data.keys())}", file=sys.stderr)
-    except Exception as e:
-        print(f"Unexpected error for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
-        raise RuntimeError(f"AI request failed for {item.get('id', 'unknown')}") from e
-    
-    # Final validation to ensure all required fields exist
+
+    paper_id = item.get("id", "unknown")
+
+    for attempt in range(max_retries):
+        try:
+            response: Structure = chain.invoke({
+                "language": language,
+                "content": item["summary"],
+            })
+            item["AI"] = response.model_dump()
+            break
+        except langchain_core.exceptions.OutputParserException as e:
+            error_msg = str(e)
+            partial_data = {}
+            if "Function Structure arguments:" in error_msg:
+                try:
+                    json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split("are not valid JSON")[0].strip()
+                    json_str = json_str.replace("\\", "\\\\")
+                    partial_data = json.loads(json_str)
+                except Exception as json_e:
+                    print(f"Failed to parse JSON for {paper_id}: {json_e}", file=sys.stderr)
+
+            item["AI"] = {**default_ai_fields, **partial_data}
+            print(f"Using partial AI data for {paper_id}: {list(partial_data.keys())}", file=sys.stderr)
+            break
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = any(term in error_str.lower() for term in ["429", "rate limit", "quota", "resourceexhausted", "503", "high demand", "overloaded", "timeout"])
+
+            if is_rate_limit and attempt < max_retries - 1:
+                wait_time = min(60.0, (2 ** attempt) * 3 + random.uniform(1.0, 3.0))
+                print(f"[RateLimit/503] {paper_id} - 재시도 ({attempt + 1}/{max_retries}). {wait_time:.1f}초 대기 중...", file=sys.stderr)
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"[Warning] {paper_id} AI 분석 실패 (시도 {attempt + 1}회): {e}", file=sys.stderr)
+                if attempt == max_retries - 1:
+                    item["AI"] = default_ai_fields
+                else:
+                    item["AI"] = default_ai_fields
+                break
+
+    # 필수 필드 보장
+    if "AI" not in item or not isinstance(item["AI"], dict):
+        item["AI"] = default_ai_fields
     for field in default_ai_fields.keys():
-        if field not in item['AI']:
-            item['AI'][field] = default_ai_fields[field]
+        if field not in item["AI"]:
+            item["AI"][field] = default_ai_fields[field]
 
     # AI가 생성한 모든 필드 민감도 확인
     for v in item.get("AI", {}).values():
         if is_sensitive(str(v)):
             return None
+
     return item
 
+
 def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
-    """모든 데이터 항목 병렬 처리"""
+    """모든 데이터 항목 처리 (속도 제한 및 지수 백오프 적용)"""
     llm = ChatOpenAI(
         **build_chat_openai_kwargs(
             model_name=model_name,
@@ -150,84 +163,91 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
         )
     ).with_structured_output(Structure, method="function_calling")
 
-    print('Connect to:', model_name, file=sys.stderr)
-    
+    print(f"Connect to: {model_name} (Total papers: {len(data)})", file=sys.stderr)
+
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(system),
-        HumanMessagePromptTemplate.from_template(template=template)
+        HumanMessagePromptTemplate.from_template(template=template),
     ])
 
     chain = prompt_template | llm
-    
-    # 스레드 풀을 사용한 병렬 처리
-    processed_data = [None] * len(data)  # 결과 목록 사전 할당
-    processing_errors = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # 모든 작업 제출
-        future_to_idx = {
-            executor.submit(process_single_item, chain, item, language): idx
-            for idx, item in enumerate(data)
-        }
-        
-        # tqdm으로 진행률 표시
-        for future in tqdm(
-            as_completed(future_to_idx),
-            total=len(data),
-            desc="Processing items"
-        ):
-            idx = future_to_idx[future]
-            try:
-                result = future.result()
-                processed_data[idx] = result
-            except Exception as e:
-                print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
-                processing_errors.append(str(e))
 
-    raise_if_processing_failed(processing_errors)
-    
-    return processed_data
+    processed_data = [None] * len(data)
+    processing_errors = []
+
+    # API Rate Limit (예: Gemini 15 RPM) 보호를 위해 순차 또는 낮은 동시성 + 지연 적용
+    if max_workers <= 1:
+        for idx, item in enumerate(tqdm(data, desc="Processing papers")):
+            try:
+                res = process_single_item(chain, item, language)
+                processed_data[idx] = res
+            except Exception as e:
+                print(f"Item {idx} failed: {e}", file=sys.stderr)
+                processing_errors.append(str(e))
+            # 요청 간 1.5초 딜레이로 15 RPM 한도 초과 방지
+            time.sleep(1.5)
+    else:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_idx = {
+                executor.submit(process_single_item, chain, item, language): idx
+                for idx, item in enumerate(data)
+            }
+            for future in tqdm(as_completed(future_to_idx), total=len(data), desc="Processing items"):
+                idx = future_to_idx[future]
+                try:
+                    result = future.result()
+                    processed_data[idx] = result
+                except Exception as e:
+                    print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
+                    processing_errors.append(str(e))
+
+    # 전체가 실패한 치명적 오류인 경우에만 예외 발생
+    if len(processing_errors) == len(data) and len(data) > 0:
+        raise_if_processing_failed(processing_errors)
+
+    return [item for item in processed_data if item is not None]
+
 
 def main():
     args = parse_args()
-    model_name = os.environ.get("MODEL_NAME", "gpt-4o-mini")
-    language = os.environ.get("LANGUAGE", 'Korean')
+    model_name = os.environ.get("MODEL_NAME", "gemini-3.7-flash")
+    language = os.environ.get("LANGUAGE", "Korean")
 
-    # 대상 파일 확인 및 삭제
-    target_file = args.data.replace('.jsonl', f'_AI_enhanced_{language}.jsonl')
+    target_file = args.data.replace(".jsonl", f"_AI_enhanced_{language}.jsonl")
     if os.path.exists(target_file):
         os.remove(target_file)
-        print(f'Removed existing file: {target_file}', file=sys.stderr)
+        print(f"Removed existing file: {target_file}", file=sys.stderr)
 
-    # 데이터 읽기
     data = []
-    with open(args.data, "r") as f:
+    with open(args.data, "r", encoding="utf-8") as f:
         for line in f:
-            data.append(json.loads(line))
+            if line.strip():
+                data.append(json.loads(line))
 
-    # 중복 제거
     seen_ids = set()
     unique_data = []
     for item in data:
-        if item['id'] not in seen_ids:
-            seen_ids.add(item['id'])
+        if item["id"] not in seen_ids:
+            seen_ids.add(item["id"])
             unique_data.append(item)
 
     data = unique_data
-    print('Open:', args.data, file=sys.stderr)
-    
-    # 모든 데이터 병렬 처리
+    print(f"Open: {args.data} (Unique items: {len(data)})", file=sys.stderr)
+
     processed_data = process_all_items(
         data,
         model_name,
         language,
-        args.max_workers
+        args.max_workers,
     )
-    
-    # 결과 저장
-    with open(target_file, "w") as f:
+
+    with open(target_file, "w", encoding="utf-8") as f:
         for item in processed_data:
             if item is not None:
-                f.write(json.dumps(item) + "\n")
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    print(f"Successfully saved {len(processed_data)} enhanced papers to {target_file}")
+
 
 if __name__ == "__main__":
     main()
