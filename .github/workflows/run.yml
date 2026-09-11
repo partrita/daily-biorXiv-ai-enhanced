@@ -45,8 +45,11 @@ jobs:
         export GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
         export TOKEN_GITHUB="${{ secrets.TOKEN_GITHUB }}"
         export LANGUAGE="${{ vars.LANGUAGE }}"
+        export LANGUAGE="${LANGUAGE:-Korean}"
         export CATEGORIES="${{ vars.CATEGORIES }}"
+        export CATEGORIES="${CATEGORIES:-de novo design}"
         export MODEL_NAME="${{ vars.MODEL_NAME }}"
+        export MODEL_NAME="${MODEL_NAME:-gemini-3.7-flash}"
         
         # Scrapy로 크롤링 실행 / Use Scrapy to crawl
         scrapy crawl arxiv -o ../data/${today}.jsonl
@@ -111,7 +114,9 @@ jobs:
         export OPENAI_BASE_URL="${{ secrets.OPENAI_BASE_URL }}"
         export GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
         export LANGUAGE="${{ vars.LANGUAGE }}"
+        export LANGUAGE="${LANGUAGE:-Korean}"
         export MODEL_NAME="${{ vars.MODEL_NAME }}"
+        export MODEL_NAME="${MODEL_NAME:-gemini-3.7-flash}"
         
         python enhance.py --data ../data/${today}.jsonl
         
@@ -131,6 +136,7 @@ jobs:
         
         # 환경 변수 설정 / Set environment variables
         export LANGUAGE="${{ vars.LANGUAGE }}"
+        export LANGUAGE="${LANGUAGE:-Korean}"
         
         cd to_md
         

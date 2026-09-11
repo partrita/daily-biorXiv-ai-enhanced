@@ -693,7 +693,7 @@ function selectLanguageForDate(date, preferredLanguage = null) {
   }
   
   // Fallback: prefer Korean if available, otherwise use the first available
-  return availableLanguages.includes('Korean') ? 'Korean' : availableLanguages[0];
+  return 'Korean';
 }
 
 async function fetchAvailableDates() {
@@ -822,7 +822,7 @@ async function loadPapersByDate(date) {
   container.innerHTML = `
     <div class="loading-container">
       <div class="loading-spinner"></div>
-      <p>Loading paper...</p>
+      <p>논문 데이터를 불러오는 중...</p>
     </div>
   `;
   
@@ -836,7 +836,7 @@ async function loadPapersByDate(date) {
       if (response.status === 404) {
         container.innerHTML = `
           <div class="loading-container">
-            <p>No papers found for this date.</p>
+            <p>해당 날짜에 수집된 논문이 없습니다.</p>
           </div>
         `;
         paperData = {};
@@ -850,7 +850,7 @@ async function loadPapersByDate(date) {
     if (!text || text.trim() === '') {
       container.innerHTML = `
         <div class="loading-container">
-          <p>No papers found for this date.</p>
+          <p>해당 날짜에 수집된 논문이 없습니다.</p>
         </div>
       `;
       paperData = {};
@@ -921,6 +921,8 @@ function parseJsonlData(jsonlText, date) {
       result[primaryCategory].push({
         title: paper.title,
         url: paper.abs || paper.pdf || `https://arxiv.org/abs/${paper.id}`,
+        abs: paper.abs || paper.url || `https://arxiv.org/abs/${paper.id}`,
+        pdf: paper.pdf || (paper.abs ? paper.abs + '.full.pdf' : `https://arxiv.org/pdf/${paper.id}`),
         authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors,
         category: allCategories,
         summary: summary,
@@ -1776,40 +1778,4 @@ function clearAllAuthors() {
   renderPapers();
 }
 
-// PDF 미리보기 크기 전환
-function togglePdfSize(button) {
-  const pdfContainer = button.closest('.pdf-preview-section').querySelector('.pdf-container');
-  const iframe = pdfContainer.querySelector('iframe');
-  const expandIcon = button.querySelector('.expand-icon');
-  const collapseIcon = button.querySelector('.collapse-icon');
-  
-  if (pdfContainer.classList.contains('expanded')) {
-    // 보통 크기로 복원
-    pdfContainer.classList.remove('expanded');
-    iframe.style.height = '800px';
-    expandIcon.style.display = 'block';
-    collapseIcon.style.display = 'none';
-    
-    // 오버레이 제거
-    const overlay = document.querySelector('.pdf-overlay');
-    if (overlay) {
-      overlay.remove();
-    }
-  } else {
-    // 확대 표시
-    pdfContainer.classList.add('expanded');
-    iframe.style.height = '90vh';
-    expandIcon.style.display = 'none';
-    collapseIcon.style.display = 'block';
-    
-    // 오버레이 추가
-    const overlay = document.createElement('div');
-    overlay.className = 'pdf-overlay';
-    document.body.appendChild(overlay);
-    
-    // 오버레이 클릭 시 PDF 축소
-    overlay.addEventListener('click', () => {
-      togglePdfSize(button);
-    });
-  }
-}
+

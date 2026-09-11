@@ -1,21 +1,18 @@
 ### [{idx}] [{title}]({url})
 *{authors}*
 
-Main category: {cate}
+카테고리: {cate}
 
-TL;DR: {tldr}
-
+**핵심 요약 (TL;DR)**: {tldr}
 
 <details>
-  <summary>Details</summary>
-Motivation: {motivation}
+  <summary>상세 내용 (Details)</summary>
 
-Method: {method}
+- **연구 배경 및 동기 (Motivation)**: {motivation}
+- **연구 방법론 (Method)**: {method}
+- **주요 성과 및 결과 (Result)**: {result}
+- **결론 및 시사점 (Conclusion)**: {conclusion}
 
-Result: {result}
-
-Conclusion: {conclusion}
-
-Abstract: {summary}
+**원문 초록 (Abstract)**: {summary}
 
 </details>
