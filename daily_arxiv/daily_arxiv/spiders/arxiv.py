@@ -1,77 +1,89 @@
-import scrapy
+import html
+import json
 import os
 import re
+import urllib.parse
+import scrapy
 
 
 class ArxivSpider(scrapy.Spider):
+    name = "arxiv"
+    allowed_domains = ["biorxiv.org", "ebi.ac.uk", "arxiv.org"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        categories = os.environ.get("CATEGORIES", "q-bio.BM, q-bio.CB, q-bio.QM, cs.CV")
-        categories = categories.split(",")
-        # 대상 카테고리 목록 저장 (후속 검증용)
-        self.target_categories = set(map(str.strip, categories))
-        self.start_urls = [
-            f"https://arxiv.org/list/{cat}/new" for cat in self.target_categories
-        ]  # 시작 URL (대상 카테고리의 최신 논문)
+        # 환경 변수에서 검색어 또는 카테고리 설정 가져오기 (기본값: "de novo design")
+        raw_query = os.environ.get("SEARCH_QUERY", "") or os.environ.get("CATEGORIES", "de novo design")
+        # 여러 키워드가 쉼표로 주어질 경우 처리
+        queries = [q.strip() for q in raw_query.split(",") if q.strip()]
+        self.search_queries = queries if queries else ["de novo design"]
+        self.logger.info(f"bioRxiv 검색어 설정: {self.search_queries}")
 
-    name = "arxiv"  # 스파이더 이름
-    allowed_domains = ["arxiv.org"]  # 크롤링 허용 도메인
+    def start_requests(self):
+        for query in self.search_queries:
+            # Europe PMC API를 통해 bioRxiv 프리프린트 검색
+            epmc_query = f"(\"{query}\") AND (PUBLISHER:bioRxiv OR SRC:PPR)"
+            url = (
+                f"https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+                f"?query={urllib.parse.quote(epmc_query)}"
+                f"&resultType=core&format=json&pageSize=30&sort=P_PDATE_D%20desc"
+            )
+            yield scrapy.Request(
+                url=url,
+                callback=self.parse_epmc_json,
+                headers={"User-Agent": "daily-arxiv-ai-enhanced/1.0"},
+                meta={"query": query},
+                dont_filter=True,
+            )
 
-    def parse(self, response):
-        # 각 논문 정보 추출
-        anchors = []
-        for li in response.css("div[id=dlpage] ul li"):
-            href = li.css("a::attr(href)").get()
-            if href and "item" in href:
-                anchors.append(int(href.split("item")[-1]))
+    def parse_epmc_json(self, response):
+        query = response.meta.get("query", "de novo design")
+        try:
+            data = json.loads(response.text)
+        except Exception as e:
+            self.logger.error(f"JSON 파싱 실패 ({response.url}): {e}")
+            return
 
-        # 각 논문의 상세 정보 순회
-        for paper in response.css("dl dt"):
-            paper_anchor = paper.css("a[name^='item']::attr(name)").get()
-            if not paper_anchor:
-                continue
-                
-            paper_id = int(paper_anchor.split("item")[-1])
-            if anchors and paper_id >= anchors[-1]:
+        results = data.get("resultList", {}).get("result", [])
+        self.logger.info(f"bioRxiv 검색어 '{query}' 결과: {len(results)}건 발견")
+
+        for r in results:
+            doi = r.get("doi", "")
+            title = r.get("title", "")
+            title = re.sub(r"<[^>]+>", "", title).strip().rstrip(".")
+            abstract = r.get("abstractText", "")
+            abstract = re.sub(r"<[^>]+>", "", abstract).strip()
+
+            if not title or not abstract:
                 continue
 
-            # 논문 ID 가져오기
-            abstract_link = paper.css("a[title='Abstract']::attr(href)").get()
-            if not abstract_link:
-                continue
-                
-            arxiv_id = abstract_link.split("/")[-1]
-            
-            # 해당 논문 설명 부분(dd 태그) 가져오기
-            paper_dd = paper.xpath("following-sibling::dd[1]")
-            if not paper_dd:
-                continue
-            
-            # 논문 카테고리 정보 추출 - subjects 영역
-            subjects_text = paper_dd.css(".list-subjects .primary-subject::text").get()
-            if not subjects_text:
-                # 기본 카테고리가 없으면 다른 방법으로 카테고리 추출 시도
-                subjects_text = paper_dd.css(".list-subjects::text").get()
-            
-            if subjects_text:
-                # 카테고리 정보 파싱 (예: "Biomolecules (q-bio.BM)")
-                # 괄호 안의 카테고리 코드 추출
-                categories_in_paper = re.findall(r'\(([^)]+)\)', subjects_text)
-                
-                # 논문 카테고리가 대상 카테고리에 포함되는지 확인
-                paper_categories = set(categories_in_paper)
-                if paper_categories.intersection(self.target_categories):
-                    yield {
-                        "id": arxiv_id,
-                        "categories": list(paper_categories),  # 디버깅용 카테고리 정보 추가
-                    }
-                    self.logger.info(f"Found paper {arxiv_id} with categories {paper_categories}")
-                else:
-                    self.logger.debug(f"Skipped paper {arxiv_id} with categories {paper_categories} (not in target {self.target_categories})")
+            authors = [
+                a.get("fullName")
+                for a in r.get("authorList", {}).get("author", [])
+                if a.get("fullName")
+            ]
+            if not authors and r.get("authorString"):
+                authors = [a.strip() for a in r.get("authorString").split(",") if a.strip()]
+
+            pub_date = r.get("firstPublicationDate") or r.get("dateOfCreation") or ""
+
+            if doi:
+                abs_url = f"https://www.biorxiv.org/content/{doi}v1"
+                pdf_url = f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
             else:
-                # 카테고리 정보를 가져올 수 없는 경우 경고 기록 후 논문 반환 (하위 호환성 유지)
-                self.logger.warning(f"Could not extract categories for paper {arxiv_id}, including anyway")
-                yield {
-                    "id": arxiv_id,
-                    "categories": [],
-                }
+                full_urls = r.get("fullTextUrlList", {}).get("fullTextUrl", [])
+                abs_url = full_urls[0].get("url", "") if full_urls else ""
+                pdf_url = abs_url
+
+            paper_id = doi or r.get("id", "")
+
+            yield {
+                "id": paper_id,
+                "title": title,
+                "authors": authors,
+                "categories": ["bioRxiv", query],
+                "comment": f"bioRxiv preprint ({pub_date})" if pub_date else "bioRxiv preprint",
+                "summary": abstract,
+                "abs": abs_url,
+                "pdf": pdf_url,
+            }
