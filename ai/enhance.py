@@ -36,12 +36,11 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_single_item(chain, item: Dict, language: str, max_retries: int = 5) -> Optional[Dict]:
+def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) -> Optional[Dict]:
     def check_github_code(content: str) -> Dict:
         """GitHub 링크 추출 및 검증"""
         code_info = {}
 
-        # 1. github.com/owner/repo 형식 우선 매칭
         github_pattern = r"https?://github\.com/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_\.]+)"
         match = re.search(github_pattern, content)
 
@@ -67,7 +66,6 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 5) 
                 pass
             return code_info
 
-        # 2. github.com이 없으면 github.io 매칭 시도
         github_io_pattern = r"https?://[a-zA-Z0-9-_]+\.github\.io(?:/[a-zA-Z0-9-_\.]+)*"
         match_io = re.search(github_io_pattern, content)
 
@@ -86,15 +84,15 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 5) 
     if code_info:
         item.update(code_info)
 
-    # 기본 AI 요약 필드 (장애 시 fallback용)
+    # 기본 AI 요약 필드 (Quota 소진 시 안전한 fallback)
     raw_summary = item.get("summary", "")
     snippet = raw_summary[:200] + "..." if len(raw_summary) > 200 else raw_summary
     default_ai_fields = {
         "tldr": snippet or "요약이 제공되지 않았습니다.",
-        "motivation": "초록 참조",
-        "method": "초록 참조",
-        "result": "초록 참조",
-        "conclusion": "초록 참조",
+        "motivation": "초록 본문 참조",
+        "method": "초록 본문 참조",
+        "result": "초록 본문 참조",
+        "conclusion": "초록 본문 참조",
     }
 
     paper_id = item.get("id", "unknown")
@@ -126,16 +124,13 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 5) 
             is_rate_limit = any(term in error_str.lower() for term in ["429", "rate limit", "quota", "resourceexhausted", "503", "high demand", "overloaded", "timeout"])
 
             if is_rate_limit and attempt < max_retries - 1:
-                wait_time = min(60.0, (2 ** attempt) * 3 + random.uniform(1.0, 3.0))
+                wait_time = (attempt + 1) * 3 + random.uniform(0.5, 1.5)
                 print(f"[RateLimit/503] {paper_id} - 재시도 ({attempt + 1}/{max_retries}). {wait_time:.1f}초 대기 중...", file=sys.stderr)
                 time.sleep(wait_time)
                 continue
             else:
                 print(f"[Warning] {paper_id} AI 분석 실패 (시도 {attempt + 1}회): {e}", file=sys.stderr)
-                if attempt == max_retries - 1:
-                    item["AI"] = default_ai_fields
-                else:
-                    item["AI"] = default_ai_fields
+                item["AI"] = default_ai_fields
                 break
 
     # 필수 필드 보장
@@ -175,21 +170,20 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
     processed_data = [None] * len(data)
     processing_errors = []
 
-    # API Rate Limit (예: Gemini 15 RPM) 보호를 위해 순차 또는 낮은 동시성 + 지연 적용
+    # Quota 절약을 위해 단일 워커로 순차 처리 + 요청 간 1.5초 간격 유지
     if max_workers <= 1:
         for idx, item in enumerate(tqdm(data, desc="Processing papers")):
             try:
-                res = process_single_item(chain, item, language)
+                res = process_single_item(chain, item, language, max_retries=2)
                 processed_data[idx] = res
             except Exception as e:
                 print(f"Item {idx} failed: {e}", file=sys.stderr)
                 processing_errors.append(str(e))
-            # 요청 간 1.5초 딜레이로 15 RPM 한도 초과 방지
             time.sleep(1.5)
     else:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_idx = {
-                executor.submit(process_single_item, chain, item, language): idx
+                executor.submit(process_single_item, chain, item, language, 2): idx
                 for idx, item in enumerate(data)
             }
             for future in tqdm(as_completed(future_to_idx), total=len(data), desc="Processing items"):
@@ -201,7 +195,7 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
                     print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
                     processing_errors.append(str(e))
 
-    # 전체가 실패한 치명적 오류인 경우에만 예외 발생
+    # 전체가 실패한 치명적 인증 오류인 경우에만 예외 발생
     if len(processing_errors) == len(data) and len(data) > 0:
         raise_if_processing_failed(processing_errors)
 
@@ -231,8 +225,14 @@ def main():
             seen_ids.add(item["id"])
             unique_data.append(item)
 
+    # 무료 API Quota 보호: 일일 최대 10편으로 제한
+    max_daily_limit = int(os.environ.get("MAX_DAILY_PAPERS", "10"))
+    if len(unique_data) > max_daily_limit:
+        print(f"Limiting papers to latest {max_daily_limit} (from {len(unique_data)}) to save API quota", file=sys.stderr)
+        unique_data = unique_data[:max_daily_limit]
+
     data = unique_data
-    print(f"Open: {args.data} (Unique items: {len(data)})", file=sys.stderr)
+    print(f"Open: {args.data} (Processing items: {len(data)})", file=sys.stderr)
 
     processed_data = process_all_items(
         data,

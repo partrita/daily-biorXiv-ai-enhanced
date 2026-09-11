@@ -3,6 +3,7 @@ import json
 import os
 import re
 import urllib.parse
+from datetime import datetime, timedelta, timezone
 import scrapy
 
 
@@ -12,21 +13,30 @@ class ArxivSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # 환경 변수에서 검색어 또는 카테고리 설정 가져오기 (기본값: "de novo design")
         raw_query = os.environ.get("SEARCH_QUERY", "") or os.environ.get("CATEGORIES", "de novo design")
-        # 여러 키워드가 쉼표로 주어질 경우 처리
         queries = [q.strip() for q in raw_query.split(",") if q.strip()]
         self.search_queries = queries if queries else ["de novo design"]
-        self.logger.info(f"bioRxiv 검색어 설정: {self.search_queries}")
+
+        # 무료 Quota 절약을 위해 날짜 범위를 최근 2~3일로 엄격히 제한
+        now = datetime.now(timezone.utc)
+        self.end_date = now.strftime("%Y-%m-%d")
+        days_back = int(os.environ.get("DAYS_BACK", "3"))
+        self.start_date = (now - timedelta(days=days_back)).strftime("%Y-%m-%d")
+        self.max_papers_per_query = int(os.environ.get("MAX_PAPERS", "5"))
+
+        self.logger.info(
+            f"bioRxiv 검색 시작 - 키워드: {self.search_queries}, "
+            f"기간: {self.start_date} ~ {self.end_date}, 키워드당 최대: {self.max_papers_per_query}건"
+        )
 
     def start_requests(self):
         for query in self.search_queries:
-            # Europe PMC API를 통해 bioRxiv 프리프린트 검색
-            epmc_query = f"(\"{query}\") AND (PUBLISHER:bioRxiv OR SRC:PPR)"
+            # 최근 날짜 범위(FIRST_PDATE)로 필터링하여 오래된 논문 대량 수집 방지
+            epmc_query = f"(\"{query}\") AND (PUBLISHER:bioRxiv OR SRC:PPR) AND FIRST_PDATE:[{self.start_date} TO {self.end_date}]"
             url = (
                 f"https://www.ebi.ac.uk/europepmc/webservices/rest/search"
                 f"?query={urllib.parse.quote(epmc_query)}"
-                f"&resultType=core&format=json&pageSize=30&sort=P_PDATE_D%20desc"
+                f"&resultType=core&format=json&pageSize={self.max_papers_per_query}&sort=P_PDATE_D%20desc"
             )
             yield scrapy.Request(
                 url=url,
@@ -45,9 +55,9 @@ class ArxivSpider(scrapy.Spider):
             return
 
         results = data.get("resultList", {}).get("result", [])
-        self.logger.info(f"bioRxiv 검색어 '{query}' 결과: {len(results)}건 발견")
+        self.logger.info(f"bioRxiv 검색어 '{query}' ({self.start_date} ~ {self.end_date}) 결과: {len(results)}건 발견")
 
-        for r in results:
+        for r in results[: self.max_papers_per_query]:
             doi = r.get("doi", "")
             title = r.get("title", "")
             title = re.sub(r"<[^>]+>", "", title).strip().rstrip(".")
