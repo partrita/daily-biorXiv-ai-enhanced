@@ -224,8 +224,8 @@ jobs:
         echo "저장소 이름: $REPO_NAME / Repository name: $REPO_NAME"
         
         if [ -f "js/data-config.js" ]; then
-          sed -i "s/PLACEHOLDER_REPO_OWNER/$REPO_OWNER/g" js/data-config.js
-          sed -i "s/PLACEHOLDER_REPO_NAME/$REPO_NAME/g" js/data-config.js
+          sed -i "s/repoOwner: .*/repoOwner: '$REPO_OWNER',/g" js/data-config.js
+          sed -i "s/repoName: .*/repoName: '$REPO_NAME',/g" js/data-config.js
           echo "✅ 저장소 정보 주입 완료 (js/data-config.js) / Repository info injected into js/data-config.js"
         else
           echo "❌ ERROR: js/data-config.js not found!"

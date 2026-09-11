@@ -12,35 +12,66 @@ const DATA_CONFIG = {
      * GitHub repository owner (username)
      * This will be replaced during GitHub Actions workflow execution
      */
-    repoOwner: 'dw-dengwei',
+    repoOwner: "PLACEHOLDER_REPO_OWNER",
 
     /**
      * GitHub repository name
      * This will be replaced during GitHub Actions workflow execution
      */
-    repoName: 'daily-arXiv-ai-enhanced',
+    repoName: "PLACEHOLDER_REPO_NAME",
 
     /**
      * Data branch name
-     * Default: 'data'
+     * Default: "data"
      */
-    dataBranch: 'data',
+    dataBranch: "data",
+
+    /**
+     * Get effective repository owner with runtime auto-detection on GitHub Pages
+     */
+    getRepoOwner: function() {
+        if (this.repoOwner && this.repoOwner !== "PLACEHOLDER_REPO_OWNER" && this.repoOwner !== "dw-dengwei") {
+            return this.repoOwner;
+        }
+        if (typeof window !== "undefined" && window.location && window.location.hostname) {
+            const host = window.location.hostname;
+            if (host.endsWith(".github.io")) {
+                return host.split(".")[0];
+            }
+        }
+        return "partrita";
+    },
+
+    /**
+     * Get effective repository name with runtime auto-detection on GitHub Pages
+     */
+    getRepoName: function() {
+        if (this.repoName && this.repoName !== "PLACEHOLDER_REPO_NAME" && this.repoName !== "daily-arXiv-ai-enhanced") {
+            return this.repoName;
+        }
+        if (typeof window !== "undefined" && window.location && window.location.pathname) {
+            const parts = window.location.pathname.split("/").filter(Boolean);
+            if (parts.length > 0 && !parts[0].endsWith(".html")) {
+                return parts[0];
+            }
+        }
+        return "daily-biorXiv-ai-enhanced";
+    },
 
     /**
      * Get the base URL for raw GitHub content from data branch
      * @returns {string} Base URL for raw GitHub content
      */
     getDataBaseUrl: function() {
-        return `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.dataBranch}`;
+        return `https://raw.githubusercontent.com/${this.getRepoOwner()}/${this.getRepoName()}/${this.dataBranch}`;
     },
 
     /**
      * Get the full URL for a data file
-     * @param {string} filePath - Relative path to the data file (e.g., 'data/2025-01-01.jsonl')
+     * @param {string} filePath - Relative path to the data file (e.g., "data/2025-01-01.jsonl")
      * @returns {string} Full URL to the data file
      */
     getDataUrl: function(filePath) {
         return `${this.getDataBaseUrl()}/${filePath}`;
     }
 };
-

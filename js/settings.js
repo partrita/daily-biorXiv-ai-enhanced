@@ -483,7 +483,7 @@ function showNotification(message, type = 'success') {
 // GitHub 통계 데이터 조회
 async function fetchGitHubStats() {
   try {
-    const response = await fetch('https://api.github.com/repos/dw-dengwei/daily-arXiv-ai-enhanced');
+    const response = await fetch(`https://api.github.com/repos/${DATA_CONFIG.getRepoOwner()}/${DATA_CONFIG.getRepoName()}`);
     const data = await response.json();
     const starCount = data.stargazers_count;
     const forkCount = data.forks_count;
