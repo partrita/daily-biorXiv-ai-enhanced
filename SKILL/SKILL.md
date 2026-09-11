@@ -1,46 +1,46 @@
 ---
 name: daily-arxiv-ai-enhanced
 version: 0.1
-description: 通过URL请求，从daily-arxiv-ai-enhanced项目中获取论文json数据
+description: URL 요청을 통해 daily-arxiv-ai-enhanced 프로젝트에서 논문 JSON 데이터를 가져옵니다
 ---
 
-# arXiv论文数据API
+# arXiv 논문 데이터 API
 
-## 触发条件
-用户想要获取daily-arXiv-ai-enhanced项目中的数据
+## 트리거 조건
+사용자가 daily-arXiv-ai-enhanced 프로젝트의 데이터를 가져오고자 할 때
 
-## 功能说明
-通过URL参数获取JSON格式的arXiv论文数据
+## 기능 설명
+URL 매개변수를 통해 JSON 형식의 arXiv 논문 데이터를 반환합니다.
 
-## 基础仓库 URL
+## 기본 저장소 URL
 https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/
 
-## URL参数
+## URL 매개변수
 
-| 参数 | 说明 | 示例 |
+| 매개변수 | 설명 | 예시 |
 |------|------|------|
-| `category` | arXiv类别 | `cs.CV`, `cs.AI`, etc. |
-| `author` | 作者姓名 | `Smith` |
-| `keywords` | 关键词，逗号分隔 | `vision,learning` |
+| `category` | arXiv 카테고리 | `cs.CV`, `q-bio.BM`, etc. |
+| `author` | 저자 이름 | `Smith` |
+| `keywords` | 키워드 (쉼표 구분) | `antibody,binding` |
 
-## 样例
+## 예시
 ```
 bash scripts/fetch.sh "https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/?category=cs.CV&author=Smith&keywords=deep"
 ```
-这里使用到了`fetch.sh`脚本来发送请求并处理响应数据，该脚本基于NodeJS和puppeteer环境，如果没有安装则会自动安装。你不能直接wget或curl这个url，因为它需要执行JavaScript来生成最终的JSON响应。
+여기에서는 `fetch.sh` 스크립트를 사용하여 요청을 보내고 응답 데이터를 처리합니다. 이 스크립트는 Node.js 및 puppeteer 환경 기반이며, 설치되어 있지 않은 경우 자동 설치됩니다. JavaScript를 실행하여 최종 JSON 응답을 생성해야 하므로 wget이나 curl을 직접 사용할 수 없습니다.
 
-## 筛选逻辑
+## 필터링 로직
 
 ```
 category AND (keywords OR author)
 ```
 
-- category: 硬筛选，只返回指定类别
-- keywords: 在标题和摘要中搜索
-- author: 在作者字段中搜索
-- keywords与author是"或"关系
+- category: 필수 필터, 지정된 카테고리만 반환
+- keywords: 제목 및 요약에서 검색
+- author: 저자 필드에서 검색
+- keywords와 author는 "OR(또는)" 관계
 
-## JSON响应结构
+## JSON 응답 구조
 
 ```json
 {
@@ -51,8 +51,8 @@ category AND (keywords OR author)
   "papers": [
     {
       "id": "2401.00001",
-      "title": "标题",
-      "authors": "作者1, 作者2",
+      "title": "제목",
+      "authors": "저자1, 저자2",
       "categories": ["cs.CV"],
       "summary": "tldr",
       "date": "2024-01-01",

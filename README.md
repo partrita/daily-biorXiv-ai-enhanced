@@ -1,7 +1,7 @@
 # 🚀 daily-arXiv-ai-enhanced
 
 > [!CAUTION]
-> 若您所在法域对学术数据有审查要求，谨慎运行本代码；任何二次分发版本必须履行合规审查（包括但不限于原始论文合规性、AI合规性）义务，否则一切法律后果由下游自行承担。
+> 귀하가 속한 사법 관할권에서 학술 데이터에 대한 검열 요건이 있는 경우 본 코드를 주의하여 실행하십시오. 2차 배포 버전은 규정 준수 검토(원문 논문 규정 준수 및 AI 규정 준수 포함하되 이에 국한되지 않음) 의무를 이행해야 하며, 그렇지 않을 경우 모든 법적 결과는 다운스트림 사용자가 직접 부담합니다.
 
 > [!CAUTION]
 > If your jurisdiction has censorship requirements for academic data, run this code with caution; any secondary distribution version must remove the entrance accessible to China and fulfill the content review obligations, otherwise all legal consequences will be borne by the downstream.
@@ -129,10 +129,10 @@ We sincerely thank the following individuals and organizations for their promoti
         <a href="https://x.com/aigclink/status/1930897858963853746"><img src="https://pbs.twimg.com/profile_images/1729450995850027008/gllXr6bh_400x400.jpg" width="100px;" alt="AIGCLINK"/><br /><sub><b>AIGCLINK</b></sub></a><br />
       </td>
       <td align="center" valign="top">
-        <a href="https://www.ruanyifeng.com/blog/2025/06/weekly-issue-353.html"><img src="https://avatars.githubusercontent.com/u/905434" width="100px;" alt="阮一峰的网络日志"/><br /><sub><b>阮一峰的网络日志 <br> 科技爱好者周刊 <br> （第 353 期）</b></sub></a><br />
+        <a href="https://www.ruanyifeng.com/blog/2025/06/weekly-issue-353.html"><img src="https://avatars.githubusercontent.com/u/905434" width="100px;" alt="루안이펑의 기술 주간지"/><br /><sub><b>루안이펑의 웹로그 <br> 기술 애호가 주간지 <br> (제353호)</b></sub></a><br />
       </td>
       <td align="center" valign="top">
-        <a href="https://hellogithub.com/periodical/volume/111"><img src="https://github.com/user-attachments/assets/eff6b6dd-0323-40c4-9db6-444a51bbc80a" width="100px;" alt="《HelloGitHub》第 111 期"/><br /><sub><b>《HelloGitHub》<br> 月刊第 111 期</b></sub></a><br />
+        <a href="https://hellogithub.com/periodical/volume/111"><img src="https://github.com/user-attachments/assets/eff6b6dd-0323-40c4-9db6-444a51bbc80a" width="100px;" alt="《HelloGitHub》 제111호"/><br /><sub><b>《HelloGitHub》<br> 월간 제111호</b></sub></a><br />
       </td>
     </tr>
   </tbody>

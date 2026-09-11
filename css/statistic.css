@@ -772,7 +772,7 @@ input:checked + .toggle-slider:before {
     height: calc(100vh - 70px);
 }
 
-/* 统计页面专用样式 */
+/* 통계 페이지 전용 스타일 */
 .statistics-page {
     padding: 24px;
     max-width: 800px;

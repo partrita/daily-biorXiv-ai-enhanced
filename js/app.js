@@ -1,34 +1,34 @@
 let currentDate = '';
 let availableDates = [];
-let currentView = 'grid'; // 'grid' 或 'list'
+let currentView = 'grid'; // 'grid' 또는 'list'
 let currentCategory = 'all';
-let urlCategoryParam = null; // 从URL参数中获取的category
-let urlJsonParam = null; // 从URL参数中获取的json（API模式）
-let urlAuthorParam = null; // 从URL参数中获取的author
-let urlKeywordsParam = null; // 从URL参数中获取的keywords
+let urlCategoryParam = null; // URL 파라미터에서 가져온 category
+let urlJsonParam = null; // URL 파라미터에서 가져온 json (API 모드)
+let urlAuthorParam = null; // URL 파라미터에서 가져온 author
+let urlKeywordsParam = null; // URL 파라미터에서 가져온 keywords
 let paperData = {};
 let flatpickrInstance = null;
 let isRangeMode = false;
-let activeKeywords = []; // 存储激活的关键词
-let userKeywords = []; // 存储用户的关键词
-let activeAuthors = []; // 存储激活的作者
-let userAuthors = []; // 存储用户的作者
-let currentPaperIndex = 0; // 当前查看的论文索引
-let currentFilteredPapers = []; // 当前过滤后的论文列表
-let textSearchQuery = ''; // 实时文本搜索查询
-let previousActiveKeywords = null; // 文本搜索激活时，暂存之前的关键词激活集合
-let previousActiveAuthors = null; // 文本搜索激活时，暂存之前的作者激活集合
+let activeKeywords = []; // 활성화된 키워드 저장
+let userKeywords = []; // 사용자 키워드 저장
+let activeAuthors = []; // 활성화된 저자 저장
+let userAuthors = []; // 사용자 저자 저장
+let currentPaperIndex = 0; // 현재 조회 중인 논문 인덱스
+let currentFilteredPapers = []; // 현재 필터링된 논문 목록
+let textSearchQuery = ''; // 실시간 텍스트 검색 쿼리
+let previousActiveKeywords = null; // 텍스트 검색 활성화 시 이전 키워드 활성 집합 임시 저장
+let previousActiveAuthors = null; // 텍스트 검색 활성화 시 이전 저자 활성 집합 임시 저장
 
-// 加载用户的关键词设置
+// 사용자 키워드 설정 로드
 function loadUserKeywords() {
   const savedKeywords = localStorage.getItem('preferredKeywords');
   if (savedKeywords) {
     try {
       userKeywords = JSON.parse(savedKeywords);
-      // 默认激活所有关键词
+      // 기본적으로 모든 키워드 활성화
       activeKeywords = [...userKeywords];
     } catch (error) {
-      console.error('解析关键词失败:', error);
+      console.error('키워드 파싱 실패:', error);
       userKeywords = [];
       activeKeywords = [];
     }
@@ -41,16 +41,16 @@ function loadUserKeywords() {
   renderFilterTags();
 }
 
-// 加载用户的作者设置
+// 사용자 저자 설정 로드
 function loadUserAuthors() {
   const savedAuthors = localStorage.getItem('preferredAuthors');
   if (savedAuthors) {
     try {
       userAuthors = JSON.parse(savedAuthors);
-      // 默认激活所有作者
+      // 기본적으로 모든 저자 활성화
       activeAuthors = [...userAuthors];
     } catch (error) {
-      console.error('解析作者失败:', error);
+      console.error('저자 파싱 실패:', error);
       userAuthors = [];
       activeAuthors = [];
     }
@@ -62,12 +62,12 @@ function loadUserAuthors() {
   renderFilterTags();
 }
 
-// 渲染过滤标签（作者和关键词）
+// 필터 태그 렌더링 (저자 및 키워드)
 function renderFilterTags() {
   const filterTagsElement = document.getElementById('filterTags');
   const filterContainer = document.querySelector('.filter-label-container');
   
-  // 如果没有作者和关键词，仅隐藏标签区域，保留容器（以显示搜索按钮）
+  // 저자와 키워드가 없으면 태그 영역만 숨기고 컨테이너는 유지 (검색 버튼 표시용)
   if ((!userAuthors || userAuthors.length === 0) && (!userKeywords || userKeywords.length === 0)) {
     filterContainer.style.display = 'flex';
     if (filterTagsElement) {
@@ -83,14 +83,14 @@ function renderFilterTags() {
   }
   filterTagsElement.innerHTML = '';
   
-  // 先添加作者标签
+  // 먼저 저자 태그 추가
   if (userAuthors && userAuthors.length > 0) {
     userAuthors.forEach(author => {
       const tagElement = document.createElement('span');
       tagElement.className = `category-button author-button ${activeAuthors.includes(author) ? 'active' : ''}`;
       tagElement.textContent = author;
       tagElement.dataset.author = author;
-      tagElement.title = "匹配作者姓名";
+      tagElement.title = "저자 이름 일치";
       
       tagElement.addEventListener('click', () => {
         toggleAuthorFilter(author);
@@ -98,7 +98,7 @@ function renderFilterTags() {
       
       filterTagsElement.appendChild(tagElement);
       
-      // 添加出现动画后移除动画类
+      // 등장 애니메이션 추가 후 애니메이션 클래스 제거
       if (!activeAuthors.includes(author)) {
         tagElement.classList.add('tag-appear');
         setTimeout(() => {
@@ -108,14 +108,14 @@ function renderFilterTags() {
     });
   }
   
-  // 再添加关键词标签
+  // 다음으로 키워드 태그 추가
   if (userKeywords && userKeywords.length > 0) {
     userKeywords.forEach(keyword => {
       const tagElement = document.createElement('span');
       tagElement.className = `category-button keyword-button ${activeKeywords.includes(keyword) ? 'active' : ''}`;
       tagElement.textContent = keyword;
       tagElement.dataset.keyword = keyword;
-      tagElement.title = "匹配标题和摘要中的关键词";
+      tagElement.title = "제목 및 초록의 키워드 일치";
       
       tagElement.addEventListener('click', () => {
         toggleKeywordFilter(keyword);
@@ -123,7 +123,7 @@ function renderFilterTags() {
       
       filterTagsElement.appendChild(tagElement);
       
-      // 添加出现动画后移除动画类
+      // 등장 애니메이션 추가 후 애니메이션 클래스 제거
       if (!activeKeywords.includes(keyword)) {
         tagElement.classList.add('tag-appear');
         setTimeout(() => {
@@ -134,117 +134,117 @@ function renderFilterTags() {
   }
 }
 
-// 切换关键词过滤
+// 키워드 필터 전환
 function toggleKeywordFilter(keyword) {
   const index = activeKeywords.indexOf(keyword);
   
   if (index === -1) {
-    // 激活该关键词
+    // 해당 키워드 활성화
     activeKeywords.push(keyword);
   } else {
-    // 取消激活该关键词
+    // 해당 키워드 비활성화
     activeKeywords.splice(index, 1);
   }
   
-  // 更新关键词标签UI
+  // 키워드 태그 UI 업데이트
   const keywordTags = document.querySelectorAll('[data-keyword]');
   keywordTags.forEach(tag => {
     if (tag.dataset.keyword === keyword) {
-      // 先移除上一次可能的高亮动画
+      // 이전의 하이라이트 애니메이션 제거
       tag.classList.remove('tag-highlight');
       
-      // 添加/移除激活状态
+      // 활성 상태 추가/제거
       tag.classList.toggle('active', activeKeywords.includes(keyword));
       
-      // 添加高亮动画
+      // 하이라이트 애니메이션 추가
       setTimeout(() => {
         tag.classList.add('tag-highlight');
       }, 10);
       
-      // 移除高亮动画
+      // 하이라이트 애니메이션 제거
       setTimeout(() => {
         tag.classList.remove('tag-highlight');
       }, 1000);
     }
   });
   
-  // 重新渲染论文列表
+  // 논문 목록 다시 렌더링
   renderPapers();
 }
 
 
-// 切换作者过滤
+// 저자 필터 전환
 function toggleAuthorFilter(author) {
   const index = activeAuthors.indexOf(author);
   
   if (index === -1) {
-    // 激活该作者
+    // 해당 저자 활성화
     activeAuthors.push(author);
   } else {
-    // 取消激活该作者
+    // 해당 저자 비활성화
     activeAuthors.splice(index, 1);
   }
   
-  // 更新作者标签UI
+  // 저자 태그 UI 업데이트
   const authorTags = document.querySelectorAll('[data-author]');
   authorTags.forEach(tag => {
     if (tag.dataset.author === author) {
-      // 先移除上一次可能的高亮动画
+      // 이전의 하이라이트 애니메이션 제거
       tag.classList.remove('tag-highlight');
       
-      // 添加/移除激活状态
+      // 활성 상태 추가/제거
       tag.classList.toggle('active', activeAuthors.includes(author));
       
-      // 添加高亮动画
+      // 하이라이트 애니메이션 추가
       setTimeout(() => {
         tag.classList.add('tag-highlight');
       }, 10);
       
-      // 移除高亮动画
+      // 하이라이트 애니메이션 제거
       setTimeout(() => {
         tag.classList.remove('tag-highlight');
       }, 1000);
     }
   });
   
-  // 重新渲染论文列表
+  // 논문 목록 다시 렌더링
   renderPapers();
 }
 
-// 从URL参数中获取category
+// URL 파라미터에서 category 가져오기
 function getUrlCategory() {
   const params = new URLSearchParams(window.location.search);
   const category = params.get('category');
   return category ? decodeURIComponent(category) : null;
 }
 
-// 从URL参数中获取json（API模式）
+// URL 파라미터에서 json(API 모드) 가져오기
 function getJsonParam() {
   const params = new URLSearchParams(window.location.search);
   const json = params.get('json');
   return json ? decodeURIComponent(json) : null;
 }
 
-// 从URL参数中获取author
+// URL 파라미터에서 author 가져오기
 function getUrlAuthor() {
   const params = new URLSearchParams(window.location.search);
   const author = params.get('author');
   return author ? decodeURIComponent(author).split(',').map(k => k.trim()).filter(k => k) : null;
 }
 
-// 从URL参数中获取keywords
+// URL 파라미터에서 keywords 가져오기
 function getUrlKeywords() {
   const params = new URLSearchParams(window.location.search);
   const keywords = params.get('keywords');
   return keywords ? decodeURIComponent(keywords).split(',').map(k => k.trim()).filter(k => k) : null;
 }
 
-// 检查是否以JSON模式运行
+// JSON 모드로 실행 중인지 확인
 function isJsonMode() {
   return getUrlCategory() !== null || getJsonParam() !== null || getUrlAuthor() !== null || getUrlKeywords() !== null;
 }
 
-// 输出JSON格式的论文数据
+// JSON 형식의 논문 데이터 출력
 function outputJsonData(papers, category) {
   const jsonData = {
     category: category,
@@ -263,15 +263,15 @@ function outputJsonData(papers, category) {
     }))
   };
 
-  // 清空页面内容
+  // 페이지 내용 비우기
   document.body.innerHTML = '';
   document.head.innerHTML = '';
 
-  // 设置JSON内容
+  // JSON 내용 설정
   document.body.textContent = JSON.stringify(jsonData, null, 2);
 }
 
-// 根据category获取论文（复用现有逻辑）
+// category에 따라 논문 가져오기 (기존 로직 재사용)
 function getPapersByCategory(paperData, category) {
   let papers = [];
   if (category === 'all') {
@@ -287,7 +287,7 @@ function getPapersByCategory(paperData, category) {
   return papers;
 }
 
-// 根据keywords匹配论文（复用现有逻辑：关键词之间是"或"关系）
+// keywords에 따라 논문 일치 확인 (기존 로직 재사용: 키워드 간 "OR" 관계)
 function matchPapersByKeywords(papers, keywords) {
   if (!keywords || keywords.length === 0) return papers.map(p => ({ ...p, isMatched: false, matchReason: null }));
 
@@ -305,14 +305,14 @@ function matchPapersByKeywords(papers, keywords) {
       return {
         ...paper,
         isMatched: true,
-        matchReason: matchedKeywords.length > 0 ? `关键词: ${matchedKeywords.join(', ')}` : null
+        matchReason: matchedKeywords.length > 0 ? `키워드: ${matchedKeywords.join(', ')}` : null
       };
     }
     return { ...paper, isMatched: false, matchReason: null };
   });
 }
 
-// 根据author匹配论文（复用现有逻辑）
+// author에 따라 논문 일치 확인 (기존 로직 재사용)
 function matchPapersByAuthor(papers, query_authors) {
   if (!query_authors) return papers.map(p => ({ ...p, isMatched: false, matchReason: null }));
 
@@ -330,22 +330,22 @@ function matchPapersByAuthor(papers, query_authors) {
       return {
         ...paper,
         isMatched: true,
-        matchReason: matchedAuthors.length > 0 ? `作者: ${matchedAuthors.join(', ')}` : null
+        matchReason: matchedAuthors.length > 0 ? `저자: ${matchedAuthors.join(', ')}` : null
       };
     }
     return { ...paper, isMatched: false, matchReason: null };
   });
 }
 
-// 组合keywords和author匹配（复用现有逻辑：关键词和作者是"或"关系）
+// keywords 및 author 일치 조합 (기존 로직 재사용: 키워드와 저자는 "OR" 관계)
 function matchPapersByKeywordsOrAuthor(papers, keywords, author) {
-  // 先获取关键词匹配结果
+  // 먼저 키워드 일치 결과 가져오기
   const keywordResults = matchPapersByKeywords(papers, keywords);
 
-  // 再获取作者匹配结果
+  // 다음으로 저자 일치 결과 가져오기
   const authorResults = matchPapersByAuthor(papers, author);
 
-  // 合并：关键词或作者匹配都算
+  // 병합: 키워드 또는 저자 일치 모두 포함
   return papers.map((paper, index) => {
     const keywordMatch = keywordResults[index];
     const authorMatch = authorResults[index];
@@ -372,13 +372,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetchGitHubStats();
 
-  // 加载用户关键词
+  // 사용자 키워드 로드
   loadUserKeywords();
 
-  // 加载用户作者
+  // 사용자 저자 로드
   loadUserAuthors();
 
-  // 解析URL中的category、json、author和keywords参数
+  // URL의 category, json, author, keywords 파라미터 파싱
   urlCategoryParam = getUrlCategory();
   urlJsonParam = getJsonParam();
   urlAuthorParam = getUrlAuthor();
@@ -401,14 +401,14 @@ async function fetchGitHubStats() {
     document.getElementById('starCount').textContent = starCount;
     document.getElementById('forkCount').textContent = forkCount;
   } catch (error) {
-    console.error('获取GitHub统计数据失败:', error);
+    console.error('GitHub 통계 데이터 가져오기 실패:', error);
     document.getElementById('starCount').textContent = '?';
     document.getElementById('forkCount').textContent = '?';
   }
 }
 
 function initEventListeners() {
-  // 日期选择器相关的事件监听
+  // 날짜 선택기 관련 이벤트 리스너
   const calendarButton = document.getElementById('calendarButton');
   calendarButton.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -429,34 +429,34 @@ function initEventListeners() {
 
   document.getElementById('dateRangeMode').addEventListener('change', toggleRangeMode);
   
-  // 其他原有的事件监听器
+  // 기타 기존 이벤트 리스너
   document.getElementById('closeModal').addEventListener('click', closeModal);
   
   document.querySelector('.paper-modal').addEventListener('click', (event) => {
     const modal = document.querySelector('.paper-modal');
     const pdfContainer = modal.querySelector('.pdf-container');
     
-    // 如果点击的是模态框背景
+    // 모달 배경을 클릭한 경우
     if (event.target === modal) {
-      // 检查PDF是否处于放大状态
+      // PDF가 확대 상태인지 확인
       if (pdfContainer && pdfContainer.classList.contains('expanded')) {
-        // 如果PDF是放大的，先将其恢复正常大小
+        // PDF가 확대 상태라면 먼저 보통 크기로 복원
         const expandButton = modal.querySelector('.pdf-expand-btn');
         if (expandButton) {
           togglePdfSize(expandButton);
         }
-        // 阻止事件继续传播，防止关闭整个模态框
+        // 이벤트 전파를 중지하여 모달 전체가 닫히는 것을 방지
         event.stopPropagation();
       } else {
-        // 如果PDF不是放大状态，则关闭整个模态框
+        // PDF가 확대 상태가 아니면 모달 전체 닫기
         closeModal();
       }
     }
   });
   
-  // 添加键盘事件监听 - Esc 键关闭模态框，左右箭头键切换论文，R 键显示随机论文
+  // 키보드 이벤트 리스너 추가 - Esc 키 모달 닫기, 좌우 방향키 논문 전환, R 키 무작위 논문 표시
   document.addEventListener('keydown', (event) => {
-    // 检查是否有输入框或文本区域处于焦点状态
+    // 입력란 또는 텍스트 영역에 포커스가 있는지 확인
     const activeElement = document.activeElement;
     const isInputFocused = activeElement && (
       activeElement.tagName === 'INPUT' || 
@@ -468,20 +468,20 @@ function initEventListeners() {
       const paperModal = document.getElementById('paperModal');
       const datePickerModal = document.getElementById('datePickerModal');
       
-      // 关闭论文模态框
+      // 논문 모달 닫기
       if (paperModal.classList.contains('active')) {
         closeModal();
       }
-      // 关闭日期选择器模态框
+      // 날짜 선택기 모달 닫기
       else if (datePickerModal.classList.contains('active')) {
         toggleDatePicker();
       }
     }
-    // 左右箭头键导航论文（仅在论文模态框打开时）
+    // 좌우 방향키로 논문 내비게이션 (논문 모달이 열려 있을 때만)
     else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       const paperModal = document.getElementById('paperModal');
       if (paperModal.classList.contains('active')) {
-        event.preventDefault(); // 防止页面滚动
+        event.preventDefault(); // 페이지 스크롤 방지
         
         if (event.key === 'ArrowLeft') {
           navigateToPreviousPaper();
@@ -490,27 +490,27 @@ function initEventListeners() {
         }
       }
     }
-    // space 键显示随机论文（在没有输入框焦点且日期选择器未打开时）
+    // space 키 무작위 논문 표시 (입력창 포커스 없고 날짜 선택기 닫혀 있을 때)
     else if (event.key === ' ' || event.key === 'Spacebar') {
       const paperModal = document.getElementById('paperModal');
       const datePickerModal = document.getElementById('datePickerModal');
       
-      // 只有在没有输入框焦点且日期选择器没有打开时才触发
-      // 现在允许在论文模态框打开时也能使用R键切换到随机论文
+      // 입력창 포커스가 없고 날짜 선택기가 열려 있지 않을 때만 트리거
+      // 논문 모달이 열려 있을 때도 R 키로 무작위 논문 전환 허용
       if (!isInputFocused && !datePickerModal.classList.contains('active')) {
-        event.preventDefault(); // 防止页面刷新
-        event.stopPropagation(); // 阻止事件冒泡
+        event.preventDefault(); // 페이지 새로고침 방지
+        event.stopPropagation(); // 이벤트 버블링 방지
         showRandomPaper();
       }
     }
   });
   
-  // 添加鼠标滚轮横向滚动支持
+  // 마우스 휠 가로 스크롤 지원 추가
   const categoryScroll = document.querySelector('.category-scroll');
   const keywordScroll = document.querySelector('.keyword-scroll');
   const authorScroll = document.querySelector('.author-scroll');
   
-  // 为类别滚动添加鼠标滚轮事件
+  // 카테고리 스크롤용 마우스 휠 이벤트 추가
   if (categoryScroll) {
     categoryScroll.addEventListener('wheel', function(e) {
       if (e.deltaY !== 0) {
@@ -520,7 +520,7 @@ function initEventListeners() {
     });
   }
   
-  // 为关键词滚动添加鼠标滚轮事件
+  // 키워드 스크롤용 마우스 휠 이벤트 추가
   if (keywordScroll) {
     keywordScroll.addEventListener('wheel', function(e) {
       if (e.deltaY !== 0) {
@@ -530,7 +530,7 @@ function initEventListeners() {
     });
   }
   
-  // 为作者滚动添加鼠标滚轮事件
+  // 저자 스크롤용 마우스 휠 이벤트 추가
   if (authorScroll) {
     authorScroll.addEventListener('wheel', function(e) {
       if (e.deltaY !== 0) {
@@ -540,7 +540,7 @@ function initEventListeners() {
     });
   }
 
-  // 其他事件监听器...
+  // 기타 이벤트 리스너...
   const categoryButtons = document.querySelectorAll('.category-button');
   categoryButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -549,7 +549,7 @@ function initEventListeners() {
     });
   });
 
-  // 回到顶部按钮：滚动显示/隐藏 + 点击回到顶部
+  // 맨 위로 가기 버튼: 스크롤 표시/숨김 + 클릭 시 맨 위로 이동
   const backToTopButton = document.getElementById('backToTop');
   if (backToTopButton) {
     const updateBackToTopVisibility = () => {
@@ -561,7 +561,7 @@ function initEventListeners() {
       }
     };
 
-    // 初始判断一次（防止刷新在中部时不显示）
+    // 초기 1회 판단 (중간에서 새로고침 시 미표시 방지)
     updateBackToTopVisibility();
     window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
 
@@ -570,7 +570,7 @@ function initEventListeners() {
     });
   }
 
-  // 文本搜索：放大镜切换显示输入框
+  // 텍스트 검색: 돋보기 아이콘으로 입력란 표시 전환
   const searchToggle = document.getElementById('textSearchToggle');
   const searchWrapper = document.querySelector('#textSearchContainer .search-input-wrapper');
   const searchInput = document.getElementById('textSearchInput');
@@ -583,11 +583,11 @@ function initEventListeners() {
       searchInput.focus();
     });
 
-    // 输入时更新查询并重新渲染
+    // 입력 시 쿼리 업데이트 및 다시 렌더링
     const handleInput = () => {
       const value = searchInput.value.trim();
       textSearchQuery = value;
-      // 有非空文本时：通过切换函数真正停用关键词/作者过滤，并记录之前状态
+      // 비어있지 않은 텍스트 입력 시: 토글 함수를 통해 키워드/저자 필터를 비활성화하고 이전 상태 기록
       if (textSearchQuery.length > 0) {
         if (previousActiveKeywords === null) {
           previousActiveKeywords = [...activeKeywords];
@@ -595,17 +595,17 @@ function initEventListeners() {
         if (previousActiveAuthors === null) {
           previousActiveAuthors = [...activeAuthors];
         }
-        // 逐个停用当前激活的关键词/作者
-        // 注意：在遍历前复制数组，避免在切换过程中修改原数组导致遍历问题
+        // 현재 활성화된 키워드/저자 순차적 비활성화
+        // 참고: 순회 중 원본 배열 수정 문제를 방지하기 위해 배열 복사 후 순회
         const keywordsToDisable = [...activeKeywords];
         const authorsToDisable = [...activeAuthors];
         keywordsToDisable.forEach(k => toggleKeywordFilter(k));
         authorsToDisable.forEach(a => toggleAuthorFilter(a));
       } else {
-        // 文本删除为空，恢复之前记录的关键词/作者激活状态
+        // 텍스트가 삭제되어 비어있으면 이전에 기록된 키워드/저자 활성 상태 복원
         if (previousActiveKeywords && previousActiveKeywords.length > 0) {
           previousActiveKeywords.forEach(k => {
-            // 若当前未激活则切换回激活
+            // 현재 비활성 상태이면 다시 활성화로 전환
             if (!activeKeywords.includes(k)) toggleKeywordFilter(k);
           });
         }
@@ -616,11 +616,11 @@ function initEventListeners() {
         }
         previousActiveKeywords = null;
         previousActiveAuthors = null;
-        // 文本为空时自动隐藏输入框
+        // 텍스트가 비어있으면 입력란 자동 숨김
         searchWrapper.style.display = 'none';
       }
 
-      // 控制清除按钮显示
+      // 지우기 버튼 표시 제어
       searchClear.style.display = textSearchQuery.length > 0 ? 'inline-flex' : 'none';
 
       renderPapers();
@@ -628,13 +628,13 @@ function initEventListeners() {
 
     searchInput.addEventListener('input', handleInput);
 
-    // 清除按钮：清空文本，恢复其他过滤
+    // 지우기 버튼: 텍스트 지우기, 기타 필터 복원
     searchClear.addEventListener('click', (e) => {
       e.stopPropagation();
       searchInput.value = '';
       textSearchQuery = '';
       searchClear.style.display = 'none';
-      // 恢复之前的过滤状态（如有）
+      // 이전 필터 상태 복원 (있는 경우)
       if (previousActiveKeywords && previousActiveKeywords.length > 0) {
         previousActiveKeywords.forEach(k => {
           if (!activeKeywords.includes(k)) toggleKeywordFilter(k);
@@ -648,11 +648,11 @@ function initEventListeners() {
       previousActiveKeywords = null;
       previousActiveAuthors = null;
       renderPapers();
-      // 清空后隐藏输入框
+      // 비운 후 입력란 숨기기
       searchWrapper.style.display = 'none';
     });
 
-    // 失焦时：若文本为空则隐藏输入框（保持有文本时不隐藏）
+    // 포커스 해제 시: 텍스트가 비어있으면 입력란 숨김 (텍스트가 있으면 유지)
     searchInput.addEventListener('blur', () => {
       const value = searchInput.value.trim();
       if (value.length === 0) {
@@ -660,7 +660,7 @@ function initEventListeners() {
       }
     });
 
-    // 点击其他地方不隐藏输入框（需求4），因此不添加blur隐藏逻辑
+    // 다른 곳 클릭 시 입력란 숨기지 않음 (blur 숨김 로직 미추가)
   }
 }
 
@@ -698,7 +698,7 @@ function selectLanguageForDate(date, preferredLanguage = null) {
 
 async function fetchAvailableDates() {
   try {
-    // 从 data 分支获取文件列表
+    // data 브랜치에서 파일 목록 가져오기
     const fileListUrl = DATA_CONFIG.getDataUrl('assets/file-list.txt');
     const response = await fetch(fileListUrl);
     if (!response.ok) {
@@ -735,7 +735,7 @@ async function fetchAvailableDates() {
 
     return availableDates;
   } catch (error) {
-    console.error('获取可用日期失败:', error);
+    console.error('사용 가능한 날짜 가져오기 실패:', error);
   }
 }
 
@@ -746,36 +746,36 @@ function initDatePicker() {
     flatpickrInstance.destroy();
   }
   
-  // 创建可用日期的映射，用于禁用无效日期
+  // 유효하지 않은 날짜 비활성화를 위한 사용 가능한 날짜 매핑 생성
   const enabledDatesMap = {};
   availableDates.forEach(date => {
     enabledDatesMap[date] = true;
   });
   
-  // 配置 Flatpickr
+  // Flatpickr 설정
   flatpickrInstance = flatpickr(datepickerInput, {
     inline: true,
     dateFormat: "Y-m-d",
     defaultDate: availableDates[0],
     enable: [
       function(date) {
-        // 只启用有效日期
+        // 유효한 날짜만 활성화
         const dateStr = date.getFullYear() + "-" +
                         String(date.getMonth() + 1).padStart(2, '0') + "-" +
                         String(date.getDate()).padStart(2, '0');
-        // 在 availableDates[0] 之后的日期全部返回 false，否则返回 true
+        // availableDates[0] 이후 날짜는 모두 false 반환, 그 외에는 true 반환
         return dateStr <= availableDates[0];
       }
     ],
     onChange: function(selectedDates, dateStr) {
       if (isRangeMode && selectedDates.length === 2) {
-        // 处理日期范围选择
+        // 날짜 범위 선택 처리
         const startDate = formatDateForAPI(selectedDates[0]);
         const endDate = formatDateForAPI(selectedDates[1]);
         loadPapersByDateRange(startDate, endDate);
         toggleDatePicker();
       } else if (!isRangeMode && selectedDates.length === 1) {
-        // 处理单个日期选择
+        // 단일 날짜 선택 처리
         const selectedDate = formatDateForAPI(selectedDates[0]);
         // if (availableDates.includes(selectedDate)) {
           loadPapersByDate(selectedDate);
@@ -785,7 +785,7 @@ function initDatePicker() {
     }
   });
   
-  // 隐藏日期输入框
+  // 날짜 입력란 숨기기
   const inputElement = document.querySelector('.flatpickr-input');
   if (inputElement) {
     inputElement.style.display = 'none';
@@ -810,13 +810,13 @@ async function loadPapersByDate(date) {
   currentDate = date;
   document.getElementById('currentDate').textContent = formatDate(date);
   
-  // 更新日期选择器中的选中日期
+  // 날짜 선택기에서 선택된 날짜 업데이트
   if (flatpickrInstance) {
     flatpickrInstance.setDate(date, false);
   }
   
-  // 不再重置激活的关键词和作者
-  // 而是保持当前选择状态
+  // 활성화된 키워드 및 저자를 재설정하지 않음
+  // 대신 현재 선택 상태 유지
   
   const container = document.getElementById('paperContainer');
   container.innerHTML = `
@@ -828,10 +828,10 @@ async function loadPapersByDate(date) {
   
   try {
     const selectedLanguage = selectLanguageForDate(date);
-    // 从 data 分支获取数据文件
+    // data 브랜치에서 데이터 파일 가져오기
     const dataUrl = DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${selectedLanguage}.jsonl`);
     const response = await fetch(dataUrl);
-    // 如果文件不存在（例如返回 404），在论文展示区域提示没有论文
+    // 파일이 존재하지 않는 경우 (예: 404 반환), 논문 표시 영역에 논문 없음 안내
     if (!response.ok) {
       if (response.status === 404) {
         container.innerHTML = `
@@ -846,7 +846,7 @@ async function loadPapersByDate(date) {
       throw new Error(`HTTP ${response.status}`);
     }
     const text = await response.text();
-    // 空文件也提示没有论文
+    // 빈 파일인 경우에도 논문 없음 안내
     if (!text || text.trim() === '') {
       container.innerHTML = `
         <div class="loading-container">
@@ -864,19 +864,19 @@ async function loadPapersByDate(date) {
 
     renderCategoryFilter(categories);
 
-    // 如果URL中有category、json、author或keywords参数，直接返回JSON
+    // URL에 category, json, author, keywords 파라미터가 있으면 즉시 JSON 반환
     const hasJsonParams = urlCategoryParam !== null || urlJsonParam !== null || urlAuthorParam !== null || urlKeywordsParam !== null;
     if (hasJsonParams) {
-      // 获取基础论文列表（按category或all）
+      // 기본 논문 목록 가져오기 (category 또는 all 기준)
       const targetCategory = urlCategoryParam || urlJsonParam || 'all';
       let papers = getPapersByCategory(paperData, targetCategory);
 
-      // 应用keywords和author匹配（"或"关系）
+      // keywords 및 author 일치 적용 ("OR" 관계)
       if (urlKeywordsParam || urlAuthorParam) {
         papers = matchPapersByKeywordsOrAuthor(papers, urlKeywordsParam, urlAuthorParam);
       }
 
-      // JSON模式：只返回匹配的论文
+      // JSON 모드: 일치하는 논문만 반환
       papers = papers.filter(p => p.isMatched);
 
       outputJsonData(papers, targetCategory);
@@ -885,7 +885,7 @@ async function loadPapersByDate(date) {
 
     renderPapers();
   } catch (error) {
-    console.error('加载论文数据失败:', error);
+    console.error('논문 데이터 로드 실패:', error);
     container.innerHTML = `
       <div class="loading-container">
         <p>Loading data fails. Please retry.</p>
@@ -936,14 +936,14 @@ function parseJsonlData(jsonlText, date) {
         code_last_update: paper.code_last_update || ''
       });
     } catch (error) {
-      console.error('解析JSON行失败:', error, line);
+      console.error('JSON 라인 파싱 실패:', error, line);
     }
   });
   
   return result;
 }
 
-// 获取所有类别并按偏好排序
+// 모든 카테고리 가져오기 및 환경설정에 따라 정렬
 function getAllCategories(data) {
   const categories = Object.keys(data);
   const catePaperCount = {};
@@ -994,7 +994,7 @@ function renderCategoryFilter(categories) {
 function filterByCategory(category) {
   currentCategory = category;
 
-  // 如果不是JSON模式，才更新URL参数
+  // JSON 모드가 아닌 경우에만 URL 파라미터 업데이트
   if (!isJsonMode()) {
     const url = new URL(window.location);
     if (category === 'all') {
@@ -1002,7 +1002,7 @@ function filterByCategory(category) {
     } else {
       url.searchParams.set('category', category);
     }
-    // 使用replaceState更新URL，不刷新页面
+    // 페이지 새로고침 없이 replaceState로 URL 업데이트
     window.history.replaceState({}, '', url);
   }
 
@@ -1010,10 +1010,10 @@ function filterByCategory(category) {
     button.classList.toggle('active', button.dataset.category === category);
   });
 
-  // 保持当前激活的过滤标签
+  // 현재 활성화된 필터 태그 유지
   renderFilterTags();
 
-  // 重置页面滚动条到顶部
+  // 페이지 스크롤 맨 위로 초기화
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -1022,7 +1022,7 @@ function filterByCategory(category) {
   renderPapers();
 }
 
-// 帮助函数：高亮文本中的匹配内容
+// 헬퍼 함수: 텍스트 내 일치 내용 하이라이트
 function highlightMatches(text, terms, className = 'highlight-match') {
   if (!terms || terms.length === 0 || !text) {
     return text;
@@ -1030,10 +1030,10 @@ function highlightMatches(text, terms, className = 'highlight-match') {
   
   let result = text;
   
-  // 按照长度排序关键词，从长到短，避免短词先替换导致长词匹配失败
+  // 키워드를 길이순(긴 순서)으로 정렬하여 짧은 단어 먼저 치환으로 인한 긴 단어 일치 실패 방지
   const sortedTerms = [...terms].sort((a, b) => b.length - a.length);
   
-  // 为每个词创建一个正则表达式，使用 'gi' 标志进行全局、不区分大小写的匹配
+  // 각 단어에 대해 정규식 생성, 'gi' 플래그로 전역 및 대소문자 무시 매칭
   sortedTerms.forEach(term => {
     const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     result = result.replace(regex, `<span class="${className}">$1</span>`);
@@ -1042,24 +1042,24 @@ function highlightMatches(text, terms, className = 'highlight-match') {
   return result;
 }
 
-// 帮助函数：格式化作者列表（用于论文卡片显示）
-// 规则：≤4个作者全部显示，>4个作者显示前2+后2，中间用省略号
+// 헬퍼 함수: 저자 목록 서식 지정 (논문 카드 표시용)
+// 규칙: 4명 이하 저자는 전체 표시, 4명 초과 시 앞 2명 + 말줄임표 + 뒤 2명 표시
 function formatAuthorsForCard(authorsString, authorTerms = []) {
   if (!authorsString) {
     return '';
   }
   
-  // 将作者字符串解析为数组（处理逗号分隔的情况）
+  // 저자 문자열을 배열로 파싱 (쉼표 구분 처리)
   const authorsArray = authorsString.split(',').map(author => author.trim()).filter(author => author.length > 0);
   
   if (authorsArray.length === 0) {
     return '';
   }
   
-  // 如果不超过4个作者，全部显示
+  // 4명 이하 저자인 경우 전체 표시
   if (authorsArray.length <= 4) {
     return authorsArray.map(author => {
-      // 对每个作者应用高亮
+      // 각 저자에 하이라이트 적용
       const highlightedAuthor = authorTerms.length > 0 
         ? highlightMatches(author, authorTerms, 'author-highlight')
         : author;
@@ -1067,13 +1067,13 @@ function formatAuthorsForCard(authorsString, authorTerms = []) {
     }).join(', ');
   }
   
-  // 超过4个作者：显示前2个、省略号、后2个
+  // 4명 초과 저자: 앞 2명, 말줄임표, 뒤 2명 표시
   const firstTwo = authorsArray.slice(0, 2);
   const lastTwo = authorsArray.slice(-2);
   
   const result = [];
   
-  // 前2个作者
+  // 앞 2명 저자
   firstTwo.forEach(author => {
     const highlightedAuthor = authorTerms.length > 0 
       ? highlightMatches(author, authorTerms, 'author-highlight')
@@ -1081,10 +1081,10 @@ function formatAuthorsForCard(authorsString, authorTerms = []) {
     result.push(`<span class="author-item">${highlightedAuthor}</span>`);
   });
   
-  // 省略号
+  // 말줄임표
   result.push('<span class="author-ellipsis">...</span>');
   
-  // 后2个作者
+  // 뒤 2명 저자
   lastTwo.forEach(author => {
     const highlightedAuthor = authorTerms.length > 0 
       ? highlightMatches(author, authorTerms, 'author-highlight')
@@ -1112,20 +1112,20 @@ function renderPapers() {
     papers = paperData[currentCategory];
   }
   
-  // 创建匹配论文的集合
+  // 일치하는 논문 집합 생성
   let filteredPapers = [...papers];
 
-  // 重置所有论文的匹配状态，避免上次渲染的残留
+  // 이전 렌더링 잔여물 방지를 위해 모든 논문의 일치 상태 초기화
   filteredPapers.forEach(p => {
     p.isMatched = false;
     p.matchReason = undefined;
   });
 
-  // 文本搜索优先：当存在非空文本时，像关键词/作者一样只排序不隐藏
+  // 텍스트 검색 우선: 텍스트가 있을 때 키워드/저자처럼 숨기지 않고 정렬만 수행
   if (textSearchQuery && textSearchQuery.trim().length > 0) {
     const q = textSearchQuery.toLowerCase();
 
-    // 排序：匹配的排前
+    // 정렬: 일치하는 항목 우선 배치
     filteredPapers.sort((a, b) => {
       const hayA = [
         a.title,
@@ -1156,7 +1156,7 @@ function renderPapers() {
       return 0;
     });
 
-    // 标记匹配项，用于卡片样式与提示
+    // 카드 스타일 및 툴팁을 위한 일치 항목 마킹
     filteredPapers.forEach(p => {
       const hay = [
         p.title,
@@ -1171,40 +1171,40 @@ function renderPapers() {
       ].join(' ').toLowerCase();
       const matched = hay.includes(q);
       p.isMatched = matched;
-      p.matchReason = matched ? [`文本: ${textSearchQuery}`] : undefined;
+      p.matchReason = matched ? [`텍스트: ${textSearchQuery}`] : undefined;
     });
   } else {
-    // 关键词和作者匹配，但不过滤，只排序
+    // 키워드 및 저자 일치(필터링 없이 정렬만 수행)
     if (activeKeywords.length > 0 || activeAuthors.length > 0) {
-      // 对论文进行排序，将匹配的论文放在前面
+      // 논문 정렬: 일치하는 논문을 앞쪽에 배치
       filteredPapers.sort((a, b) => {
         const aMatchesKeyword = activeKeywords.length > 0 ? 
           activeKeywords.some(keyword => {
-            // 仅在标题和摘要中搜索关键词
+            // 제목과 초록에서만 키워드 검색
             const searchText = `${a.title} ${a.summary}`.toLowerCase();
             return searchText.includes(keyword.toLowerCase());
           }) : false;
           
         const aMatchesAuthor = activeAuthors.length > 0 ?
           activeAuthors.some(author => {
-            // 仅在作者中搜索作者名
+            // 저자 목록에서만 저자명 검색
             return a.authors.toLowerCase().includes(author.toLowerCase());
           }) : false;
           
         const bMatchesKeyword = activeKeywords.length > 0 ?
           activeKeywords.some(keyword => {
-            // 仅在标题和摘要中搜索关键词
+            // 제목과 초록에서만 키워드 검색
             const searchText = `${b.title} ${b.summary}`.toLowerCase();
             return searchText.includes(keyword.toLowerCase());
           }) : false;
           
         const bMatchesAuthor = activeAuthors.length > 0 ?
           activeAuthors.some(author => {
-            // 仅在作者中搜索作者名
+            // 저자 목록에서만 저자명 검색
             return b.authors.toLowerCase().includes(author.toLowerCase());
           }) : false;
       
-        // a和b的匹配状态（关键词或作者匹配都算）
+        // a와 b의 일치 상태 (키워드 또는 저자 일치 포함)
         const aMatches = aMatchesKeyword || aMatchesAuthor;
         const bMatches = bMatchesKeyword || bMatchesAuthor;
         
@@ -1213,7 +1213,7 @@ function renderPapers() {
         return 0;
       });
       
-      // 标记匹配的论文
+      // 일치하는 논문 마킹
       filteredPapers.forEach(paper => {
         const matchesKeyword = activeKeywords.length > 0 ?
           activeKeywords.some(keyword => {
@@ -1226,10 +1226,10 @@ function renderPapers() {
             return paper.authors.toLowerCase().includes(author.toLowerCase());
           }) : false;
           
-        // 添加匹配标记（用于后续高亮整个论文卡片）
+        // 일치 마크 추가 (전체 논문 카드 하이라이트용)
         paper.isMatched = matchesKeyword || matchesAuthor;
         
-        // 添加匹配原因（用于显示匹配提示）
+        // 일치 사유 추가 (일치 안내 툴팁 표시용)
         if (paper.isMatched) {
           paper.matchReason = [];
           if (matchesKeyword) {
@@ -1237,7 +1237,7 @@ function renderPapers() {
               `${paper.title} ${paper.summary}`.toLowerCase().includes(keyword.toLowerCase())
             );
             if (matchedKeywords.length > 0) {
-              paper.matchReason.push(`关键词: ${matchedKeywords.join(', ')}`);
+              paper.matchReason.push(`키워드: ${matchedKeywords.join(', ')}`);
             }
           }
           if (matchesAuthor) {
@@ -1245,7 +1245,7 @@ function renderPapers() {
               paper.authors.toLowerCase().includes(author.toLowerCase())
             );
             if (matchedAuthors.length > 0) {
-              paper.matchReason.push(`作者: ${matchedAuthors.join(', ')}`);
+              paper.matchReason.push(`저자: ${matchedAuthors.join(', ')}`);
             }
           }
         }
@@ -1253,37 +1253,37 @@ function renderPapers() {
     }
   }
   
-  // 关键词和作者匹配，但不过滤，只排序
+  // 키워드 및 저자 일치(필터링 없이 정렬만 수행)
   if (activeKeywords.length > 0 || activeAuthors.length > 0) {
-    // 对论文进行排序，将匹配的论文放在前面
+    // 논문 정렬: 일치하는 논문을 앞쪽에 배치
     filteredPapers.sort((a, b) => {
       const aMatchesKeyword = activeKeywords.length > 0 ? 
         activeKeywords.some(keyword => {
-          // 仅在标题和摘要中搜索关键词
+          // 제목과 초록에서만 키워드 검색
           const searchText = `${a.title} ${a.summary}`.toLowerCase();
           return searchText.includes(keyword.toLowerCase());
         }) : false;
         
       const aMatchesAuthor = activeAuthors.length > 0 ?
         activeAuthors.some(author => {
-          // 仅在作者中搜索作者名
+          // 저자 목록에서만 저자명 검색
           return a.authors.toLowerCase().includes(author.toLowerCase());
         }) : false;
         
       const bMatchesKeyword = activeKeywords.length > 0 ?
         activeKeywords.some(keyword => {
-          // 仅在标题和摘要中搜索关键词
+          // 제목과 초록에서만 키워드 검색
           const searchText = `${b.title} ${b.summary}`.toLowerCase();
           return searchText.includes(keyword.toLowerCase());
         }) : false;
         
       const bMatchesAuthor = activeAuthors.length > 0 ?
         activeAuthors.some(author => {
-          // 仅在作者中搜索作者名
+          // 저자 목록에서만 저자명 검색
           return b.authors.toLowerCase().includes(author.toLowerCase());
         }) : false;
       
-      // a和b的匹配状态（关键词或作者匹配都算）
+      // a와 b의 일치 상태 (키워드 또는 저자 일치 포함)
       const aMatches = aMatchesKeyword || aMatchesAuthor;
       const bMatches = bMatchesKeyword || bMatchesAuthor;
       
@@ -1292,7 +1292,7 @@ function renderPapers() {
       return 0;
     });
     
-    // 标记匹配的论文
+    // 일치하는 논문 마킹
     filteredPapers.forEach(paper => {
       const matchesKeyword = activeKeywords.length > 0 ?
         activeKeywords.some(keyword => {
@@ -1305,10 +1305,10 @@ function renderPapers() {
           return paper.authors.toLowerCase().includes(author.toLowerCase());
         }) : false;
         
-      // 添加匹配标记（用于后续高亮整个论文卡片）
+      // 일치 마크 추가 (전체 논문 카드 하이라이트용)
       paper.isMatched = matchesKeyword || matchesAuthor;
       
-      // 添加匹配原因（用于显示匹配提示）
+      // 일치 사유 추가 (일치 안내 툴팁 표시용)
       if (paper.isMatched) {
         paper.matchReason = [];
         if (matchesKeyword) {
@@ -1316,7 +1316,7 @@ function renderPapers() {
             `${paper.title} ${paper.summary}`.toLowerCase().includes(keyword.toLowerCase())
           );
           if (matchedKeywords.length > 0) {
-            paper.matchReason.push(`关键词: ${matchedKeywords.join(', ')}`);
+            paper.matchReason.push(`키워드: ${matchedKeywords.join(', ')}`);
           }
         }
         if (matchesAuthor) {
@@ -1324,14 +1324,14 @@ function renderPapers() {
             paper.authors.toLowerCase().includes(author.toLowerCase())
           );
           if (matchedAuthors.length > 0) {
-            paper.matchReason.push(`作者: ${matchedAuthors.join(', ')}`);
+            paper.matchReason.push(`저자: ${matchedAuthors.join(', ')}`);
           }
         }
       }
     });
   }
   
-  // 存储当前过滤后的论文列表，用于箭头键导航
+  // 방향키 내비게이션용 현재 필터링된 논문 목록 저장
   currentFilteredPapers = [...filteredPapers];
   
   if (filteredPapers.length === 0) {
@@ -1345,20 +1345,20 @@ function renderPapers() {
   
   filteredPapers.forEach((paper, index) => {
     const paperCard = document.createElement('div');
-    // 添加匹配高亮类
+    // 일치 하이라이트 클래스 추가
     paperCard.className = `paper-card ${paper.isMatched ? 'matched-paper' : ''}`;
     paperCard.dataset.id = paper.id || paper.url;
     
     if (paper.isMatched) {
-      // 添加匹配原因提示
-      paperCard.title = `匹配: ${paper.matchReason.join(' | ')}`;
+      // 일치 사유 툴팁 추가
+      paperCard.title = `일치: ${paper.matchReason.join(' | ')}`;
     }
     
     const categoryTags = paper.allCategories ? 
       paper.allCategories.map(cat => `<span class="category-tag">${cat}</span>`).join('') : 
       `<span class="category-tag">${paper.category}</span>`;
     
-    // 组合需要高亮的词：关键词 + 文本搜索
+    // 하이라이트할 단어 조합: 키워드 + 텍스트 검색
     const titleSummaryTerms = [];
     if (activeKeywords.length > 0) {
       titleSummaryTerms.push(...activeKeywords);
@@ -1367,7 +1367,7 @@ function renderPapers() {
       titleSummaryTerms.push(textSearchQuery.trim());
     }
 
-    // 高亮标题和摘要（关键词与文本搜索）
+    // 제목 및 초록 하이라이트 (키워드 및 텍스트 검색)
     const highlightedTitle = titleSummaryTerms.length > 0 
       ? highlightMatches(paper.title, titleSummaryTerms, 'keyword-highlight') 
       : paper.title;
@@ -1375,15 +1375,15 @@ function renderPapers() {
       ? highlightMatches(paper.summary, titleSummaryTerms, 'keyword-highlight') 
       : paper.summary;
 
-    // 高亮作者（作者过滤 + 文本搜索）
+    // 저자 하이라이트 (저자 필터 + 텍스트 검색)
     const authorTerms = [];
     if (activeAuthors.length > 0) authorTerms.push(...activeAuthors);
     if (textSearchQuery && textSearchQuery.trim().length > 0) authorTerms.push(textSearchQuery.trim());
     
-    // 格式化作者列表（应用截断规则和高亮）
+    // 저자 목록 서식 지정 (생략 규칙 및 하이라이트 적용)
     const formattedAuthors = formatAuthorsForCard(paper.authors, authorTerms);
     
-    // 构建 GitHub 按钮 HTML
+    // GitHub 버튼 HTML 생성
     // let githubHtml = '';
     // if (paper.code_url) {
     //   const stars = paper.code_stars ? `<span class="github-stars">★ ${paper.code_stars}</span>` : '';
@@ -1402,7 +1402,7 @@ function renderPapers() {
 
     paperCard.innerHTML = `
       <div class="paper-card-index">${index + 1}</div>
-      ${paper.isMatched ? '<div class="match-badge" title="匹配您的搜索条件"></div>' : ''}
+      ${paper.isMatched ? '<div class="match-badge" title="검색 조건과 일치함"></div>' : ''}
       <div class="paper-card-header">
         <h3 class="paper-card-title">${highlightedTitle}</h3>
         <p class="paper-card-authors">${formattedAuthors}</p>
@@ -1422,7 +1422,7 @@ function renderPapers() {
     `;
     
     paperCard.addEventListener('click', () => {
-      currentPaperIndex = index; // 记录当前点击的论文索引
+      currentPaperIndex = index; // 현재 클릭한 논문 인덱스 기록
       showPaperDetails(paper, index + 1);
     });
     
@@ -1438,19 +1438,19 @@ function showPaperDetails(paper, paperIndex) {
   const pdfLink = document.getElementById('pdfLink');
   const htmlLink = document.getElementById('htmlLink');
   
-  // 重置模态框的滚动位置
+  // 모달 스크롤 위치 초기화
   modalBody.scrollTop = 0;
   
-  // 组合高亮词：关键词 + 文本搜索
+  // 하이라이트 단어 조합: 키워드 + 텍스트 검색
   const modalTitleTerms = [];
   if (activeKeywords.length > 0) modalTitleTerms.push(...activeKeywords);
   if (textSearchQuery && textSearchQuery.trim().length > 0) modalTitleTerms.push(textSearchQuery.trim());
-  // 高亮标题
+  // 제목 하이라이트
   const highlightedTitle = modalTitleTerms.length > 0 
     ? highlightMatches(paper.title, modalTitleTerms, 'keyword-highlight') 
     : paper.title;
   
-  // 在标题前添加索引号
+  // 제목 앞에 인덱스 번호 추가
   modalTitle.innerHTML = paperIndex ? `<span class="paper-index-badge">${paperIndex}</span> ${highlightedTitle}` : highlightedTitle;
   
   const abstractText = paper.details || '';
@@ -1459,7 +1459,7 @@ function showPaperDetails(paper, paperIndex) {
     paper.allCategories.join(', ') : 
     paper.category;
   
-  // 高亮作者（作者过滤 + 文本搜索）
+  // 저자 하이라이트 (저자 필터 + 텍스트 검색)
   const modalAuthorTerms = [];
   if (activeAuthors.length > 0) modalAuthorTerms.push(...activeAuthors);
   if (textSearchQuery && textSearchQuery.trim().length > 0) modalAuthorTerms.push(textSearchQuery.trim());
@@ -1467,17 +1467,17 @@ function showPaperDetails(paper, paperIndex) {
     ? highlightMatches(paper.authors, modalAuthorTerms, 'author-highlight') 
     : paper.authors;
   
-  // 高亮摘要（关键词 + 文本搜索）
+  // 초록 하이라이트 (키워드 + 텍스트 검색)
   const highlightedSummary = modalTitleTerms.length > 0 
     ? highlightMatches(paper.summary, modalTitleTerms, 'keyword-highlight') 
     : paper.summary;
   
-  // 高亮详情（Abstract/details）
+  // 상세 내용 하이라이트 (Abstract/details)
   const highlightedAbstract = modalTitleTerms.length > 0 
     ? highlightMatches(abstractText, modalTitleTerms, 'keyword-highlight') 
     : abstractText;
   
-  // 高亮其他部分（如果存在且是摘要的一部分）
+  // 기타 부분 하이라이트 (존재하고 초록의 일부인 경우)
   const highlightedMotivation = paper.motivation && modalTitleTerms.length > 0 
     ? highlightMatches(paper.motivation, modalTitleTerms, 'keyword-highlight') 
     : paper.motivation;
@@ -1494,10 +1494,10 @@ function showPaperDetails(paper, paperIndex) {
     ? highlightMatches(paper.conclusion, modalTitleTerms, 'keyword-highlight') 
     : paper.conclusion;
   
-  // 判断是否需要显示高亮说明
+  // 하이라이트 설명 표시 여부 판단
   const showHighlightLegend = activeKeywords.length > 0 || activeAuthors.length > 0;
   
-  // 添加匹配标记
+  // 일치 마크 추가
   const matchedPaperClass = paper.isMatched ? 'matched-paper-details' : '';
   
   const modalContent = `
@@ -1556,11 +1556,11 @@ function showPaperDetails(paper, paperIndex) {
   }
   // ---------------------------
 
-  // 提示词来自：https://papers.cool/
-  prompt = `请你阅读这篇文章${paper.url.replace('abs', 'pdf')},总结一下这篇文章解决的问题、相关工作、研究方法、做了什么实验及其结果、结论，最后整体总结一下这篇文章的内容`
-  document.getElementById('kimiChatLink').href = `https://www.kimi.com/_prefill_chat?prefill_prompt=${prompt}&system_prompt=你是一个学术助手，后面的对话将围绕着以下论文内容进行，已经通过链接给出了论文的PDF和论文已有的FAQ。用户将继续向你咨询论文的相关问题，请你作出专业的回答，不要出现第一人称，当涉及到分点回答时，鼓励你以markdown格式输出。&send_immediately=true&force_search=true`;
+  // 프롬프트 출처: https://papers.cool/
+  prompt = `이 논문을 읽고 ${paper.url.replace('abs', 'pdf')}, 이 논문이 해결한 문제, 관련 연구, 연구 방법, 수행한 실험 및 결과, 결론을 요약하고, 마지막으로 이 논문의 내용을 종합적으로 요약해 주세요`
+  document.getElementById('kimiChatLink').href = `https://www.kimi.com/_prefill_chat?prefill_prompt=${prompt}&system_prompt=당신은 학술 조수입니다. 이후 대화는 다음 논문 내용을 중심으로 진행되며 링크를 통해 논문 PDF와 FAQ가 제공됩니다. 사용자가 논문 관련 질문을 계속할 것이며 전문적으로 답변해 주세요. 1인칭 표현은 지양하고 개조식 답변 시 마크다운 형식을 권장합니다.&send_immediately=true&force_search=true`;
   
-  // 更新论文位置信息
+  // 논문 위치 정보 업데이트
   const paperPosition = document.getElementById('paperPosition');
   if (paperPosition && currentFilteredPapers.length > 0) {
     paperPosition.textContent = `${currentPaperIndex + 1} / ${currentFilteredPapers.length}`;
@@ -1574,14 +1574,14 @@ function closeModal() {
   const modal = document.getElementById('paperModal');
   const modalBody = document.getElementById('modalBody');
   
-  // 重置模态框的滚动位置
+  // 모달 스크롤 위치 초기화
   modalBody.scrollTop = 0;
   
   modal.classList.remove('active');
   document.body.style.overflow = '';
 }
 
-// 导航到上一篇论文
+// 이전 논문으로 이동
 function navigateToPreviousPaper() {
   if (currentFilteredPapers.length === 0) return;
   
@@ -1590,7 +1590,7 @@ function navigateToPreviousPaper() {
   showPaperDetails(paper, currentPaperIndex + 1);
 }
 
-// 导航到下一篇论文
+// 다음 논문으로 이동
 function navigateToNextPaper() {
   if (currentFilteredPapers.length === 0) return;
   
@@ -1599,47 +1599,47 @@ function navigateToNextPaper() {
   showPaperDetails(paper, currentPaperIndex + 1);
 }
 
-// 显示随机论文
+// 무작위 논문 표시
 function showRandomPaper() {
-  // 检查是否有可用的论文
+  // 사용 가능한 논문이 있는지 확인
   if (currentFilteredPapers.length === 0) {
     console.log('No papers available to show random paper');
     return;
   }
   
-  // 生成随机索引
+  // 무작위 인덱스 생성
   const randomIndex = Math.floor(Math.random() * currentFilteredPapers.length);
   const randomPaper = currentFilteredPapers[randomIndex];
   
-  // 更新当前论文索引
+  // 현재 논문 인덱스 업데이트
   currentPaperIndex = randomIndex;
   
-  // 显示随机论文
+  // 무작위 논문 표시
   showPaperDetails(randomPaper, currentPaperIndex + 1);
   
-  // 显示随机论文指示器
+  // 무작위 논문 인디케이터 표시
   showRandomPaperIndicator();
   
   console.log(`Showing random paper: ${randomIndex + 1}/${currentFilteredPapers.length}`);
 }
 
-// 显示随机论文指示器
+// 무작위 논문 인디케이터 표시
 function showRandomPaperIndicator() {
-  // 移除已存在的指示器
+  // 기존 인디케이터 제거
   const existingIndicator = document.querySelector('.random-paper-indicator');
   if (existingIndicator) {
     existingIndicator.remove();
   }
   
-  // 创建新的指示器
+  // 새 인디케이터 생성
   const indicator = document.createElement('div');
   indicator.className = 'random-paper-indicator';
   indicator.textContent = 'Random Paper';
   
-  // 添加到页面
+  // 페이지에 추가
   document.body.appendChild(indicator);
   
-  // 3秒后自动移除
+  // 3초 후 자동 제거
   setTimeout(() => {
     if (indicator && indicator.parentNode) {
       indicator.remove();
@@ -1654,7 +1654,7 @@ function toggleDatePicker() {
   if (datePicker.classList.contains('active')) {
     document.body.style.overflow = 'hidden';
     
-    // 重新初始化日期选择器以确保它反映最新的可用日期
+    // 최신 사용 가능한 날짜를 반영하도록 날짜 선택기 재초기화
     if (flatpickrInstance) {
       flatpickrInstance.setDate(currentDate, false);
     }
@@ -1678,11 +1678,11 @@ function formatDate(dateString) {
 }
 
 async function loadPapersByDateRange(startDate, endDate) {
-  // 兼容用户反向点击日期（先点结束日再点开始日）的场景
+  // 사용자가 날짜를 역순으로 클릭한 경우(종료일 먼저 클릭 후 시작일 클릭) 호환 처리
   const normalizedStartDate = startDate <= endDate ? startDate : endDate;
   const normalizedEndDate = startDate <= endDate ? endDate : startDate;
 
-  // 获取日期范围内的所有有效日期
+  // 날짜 범위 내의 모든 유효한 날짜 가져오기
   const validDatesInRange = availableDates.filter(date => {
     return date >= normalizedStartDate && date <= normalizedEndDate;
   });
@@ -1695,8 +1695,8 @@ async function loadPapersByDateRange(startDate, endDate) {
   currentDate = `${normalizedStartDate} to ${normalizedEndDate}`;
   document.getElementById('currentDate').textContent = `${formatDate(normalizedStartDate)} - ${formatDate(normalizedEndDate)}`;
   
-  // 不再重置激活的关键词和作者
-  // 而是保持当前选择状态
+  // 활성화된 키워드 및 저자를 재설정하지 않음
+  // 대신 현재 선택 상태 유지
   
   const container = document.getElementById('paperContainer');
   container.innerHTML = `
@@ -1707,18 +1707,18 @@ async function loadPapersByDateRange(startDate, endDate) {
   `;
   
   try {
-    // 加载所有日期的论文数据
+    // 모든 날짜의 논문 데이터 로드
     const allPaperData = {};
     
     for (const date of validDatesInRange) {
       const selectedLanguage = selectLanguageForDate(date);
-      // 从 data 分支获取数据文件
+      // data 브랜치에서 데이터 파일 가져오기
       const dataUrl = DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${selectedLanguage}.jsonl`);
       const response = await fetch(dataUrl);
       const text = await response.text();
       const dataPapers = parseJsonlData(text, date);
       
-      // 合并数据
+      // 데이터 병합
       Object.keys(dataPapers).forEach(category => {
         if (!allPaperData[category]) {
           allPaperData[category] = [];
@@ -1733,19 +1733,19 @@ async function loadPapersByDateRange(startDate, endDate) {
 
     renderCategoryFilter(categories);
 
-    // 如果URL中有category、json、author或keywords参数，直接返回JSON
+    // URL에 category, json, author, keywords 파라미터가 있으면 즉시 JSON 반환
     const hasJsonParams = urlCategoryParam !== null || urlJsonParam !== null || urlAuthorParam !== null || urlKeywordsParam !== null;
     if (hasJsonParams) {
-      // 获取基础论文列表（按category或all）
+      // 기본 논문 목록 가져오기 (category 또는 all 기준)
       const targetCategory = urlCategoryParam || urlJsonParam || 'all';
       let papers = getPapersByCategory(paperData, targetCategory);
 
-      // 应用keywords和author匹配（"或"关系）
+      // keywords 및 author 일치 적용 ("OR" 관계)
       if (urlKeywordsParam || urlAuthorParam) {
         papers = matchPapersByKeywordsOrAuthor(papers, urlKeywordsParam, urlAuthorParam);
       }
 
-      // JSON模式：只返回匹配的论文
+      // JSON 모드: 일치하는 논문만 반환
       papers = papers.filter(p => p.isMatched);
 
       outputJsonData(papers, targetCategory);
@@ -1754,7 +1754,7 @@ async function loadPapersByDateRange(startDate, endDate) {
 
     renderPapers();
   } catch (error) {
-    console.error('加载论文数据失败:', error);
+    console.error('논문 데이터 로드 실패:', error);
     container.innerHTML = `
       <div class="loading-container">
         <p>Loading data fails. Please retry.</p>
@@ -1764,23 +1764,23 @@ async function loadPapersByDateRange(startDate, endDate) {
   }
 }
 
-// 清除所有激活的关键词
+// 모든 활성 키워드 지우기
 function clearAllKeywords() {
   activeKeywords = [];
   // renderKeywordTags();
-  // 重新渲染论文列表，移除关键词匹配的高亮和优先排序
+  // 논문 목록 다시 렌더링, 키워드 일치 하이라이트 및 우선 정렬 제거
   renderPapers();
 }
 
-// 清除所有作者过滤
+// 모든 저자 필터 지우기
 function clearAllAuthors() {
   activeAuthors = [];
   renderFilterTags();
-  // 重新渲染论文列表，移除作者匹配的高亮和优先排序
+  // 논문 목록 다시 렌더링, 저자 일치 하이라이트 및 우선 정렬 제거
   renderPapers();
 }
 
-// 切换PDF预览器大小
+// PDF 미리보기 크기 전환
 function togglePdfSize(button) {
   const pdfContainer = button.closest('.pdf-preview-section').querySelector('.pdf-container');
   const iframe = pdfContainer.querySelector('iframe');
@@ -1788,30 +1788,30 @@ function togglePdfSize(button) {
   const collapseIcon = button.querySelector('.collapse-icon');
   
   if (pdfContainer.classList.contains('expanded')) {
-    // 恢复正常大小
+    // 보통 크기로 복원
     pdfContainer.classList.remove('expanded');
     iframe.style.height = '800px';
     expandIcon.style.display = 'block';
     collapseIcon.style.display = 'none';
     
-    // 移除遮罩层
+    // 오버레이 제거
     const overlay = document.querySelector('.pdf-overlay');
     if (overlay) {
       overlay.remove();
     }
   } else {
-    // 放大显示
+    // 확대 표시
     pdfContainer.classList.add('expanded');
     iframe.style.height = '90vh';
     expandIcon.style.display = 'none';
     collapseIcon.style.display = 'block';
     
-    // 添加遮罩层
+    // 오버레이 추가
     const overlay = document.createElement('div');
     overlay.className = 'pdf-overlay';
     document.body.appendChild(overlay);
     
-    // 点击遮罩层时收起PDF
+    // 오버레이 클릭 시 PDF 축소
     overlay.addEventListener('click', () => {
       togglePdfSize(button);
     });

@@ -62,10 +62,10 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-# 配置数据处理管道 / Configure item processing pipelines
-# 数字越小优先级越高 / Lower numbers have higher priority
+# 데이터 처리 파이프라인 설정 / Configure item processing pipelines
+# 숫자가 작을수록 우선순위가 높음 / Lower numbers have higher priority
 ITEM_PIPELINES = {
-    # 主要数据保存管道 / Main data saving pipeline
+    # 메인 데이터 저장 파이프라인 / Main data saving pipeline
     "daily_arxiv.pipelines.DailyArxivPipeline": 300,
 }
 

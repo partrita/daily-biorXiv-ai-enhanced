@@ -47,7 +47,7 @@ async function fetchGitHubStats() {
     document.getElementById('starCount').textContent = starCount;
     document.getElementById('forkCount').textContent = forkCount;
   } catch (error) {
-    console.error('获取GitHub统计数据失败:', error);
+    console.error('GitHub 통계 데이터 가져오기 실패:', error);
     document.getElementById('starCount').textContent = '?';
     document.getElementById('forkCount').textContent = '?';
   }
@@ -60,7 +60,7 @@ function toggleDatePicker() {
   if (datePicker.classList.contains('active')) {
     document.body.style.overflow = 'hidden';
     
-    // 重新初始化日期选择器以确保它反映最新的可用日期
+    // 최신 사용 가능한 날짜를 반영하도록 날짜 선택기 재초기화
     if (flatpickrInstance) {
       flatpickrInstance.setDate(currentDate, false);
     }
@@ -70,14 +70,14 @@ function toggleDatePicker() {
 }
 
 function initEventListeners() {
-  // 只允许通过日历按钮打开日期选择器
+  // 캘린더 버튼을 통해서만 날짜 선택기 열기 허용
   const calendarButton = document.getElementById('calendarButton');
   calendarButton.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleDatePicker();
   });
   
-  // 点击模态框背景时关闭
+  // 모달 배경 클릭 시 닫기
   const datePickerModal = document.querySelector('.date-picker-modal');
   datePickerModal.addEventListener('click', (event) => {
     if (event.target === datePickerModal) {
@@ -85,7 +85,7 @@ function initEventListeners() {
     }
   });
   
-  // 阻止日期选择器内容区域的点击事件冒泡
+  // 날짜 선택기 콘텐츠 영역의 클릭 이벤트 전파 방지
   const datePickerContent = document.querySelector('.date-picker-content');
   datePickerContent.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -93,13 +93,13 @@ function initEventListeners() {
   
   document.getElementById('dateRangeMode').addEventListener('change', toggleRangeMode);
   
-  // 添加侧边栏关闭按钮事件
+  // 사이드바 닫기 버튼 이벤트 추가
   const closeButton = document.querySelector('.close-sidebar');
   if (closeButton) {
     closeButton.addEventListener('click', closeSidebar);
   }
   
-  // 点击侧边栏外部时关闭侧边栏
+  // 사이드바 외부 클릭 시 사이드바 닫기
   document.addEventListener('click', (event) => {
     const sidebar = document.getElementById('paperSidebar');
     const isClickInside = sidebar.contains(event.target);
@@ -146,7 +146,7 @@ function selectLanguageForDate(date, preferredLanguage = null) {
 
 async function fetchAvailableDates() {
   try {
-    // 从 data 分支获取文件列表
+    // data 브랜치에서 파일 목록 가져오기
     const fileListUrl = DATA_CONFIG.getDataUrl('assets/file-list.txt');
     const response = await fetch(fileListUrl);
     if (!response.ok) {
@@ -183,7 +183,7 @@ async function fetchAvailableDates() {
 
     return availableDates;
   } catch (error) {
-    console.error('获取可用日期失败:', error);
+    console.error('사용 가능한 날짜 가져오기 실패:', error);
   }
 }
 
@@ -194,20 +194,20 @@ function initDatePicker() {
     flatpickrInstance.destroy();
   }
   
-  // 创建可用日期的映射，用于禁用无效日期
+  // 유효하지 않은 날짜 비활성화를 위한 사용 가능한 날짜 매핑 생성
   const enabledDatesMap = {};
   availableDates.forEach(date => {
     enabledDatesMap[date] = true;
   });
   
-  // 配置 Flatpickr
+  // Flatpickr 설정
   flatpickrInstance = flatpickr(datepickerInput, {
     inline: true,
     dateFormat: "Y-m-d",
     defaultDate: availableDates[0],
     enable: [
       function(date) {
-        // 只启用有效日期
+        // 유효한 날짜만 활성화
         const dateStr = date.getFullYear() + "-" + 
                         String(date.getMonth() + 1).padStart(2, '0') + "-" + 
                         String(date.getDate()).padStart(2, '0');
@@ -216,13 +216,13 @@ function initDatePicker() {
     ],
     onChange: function(selectedDates, dateStr) {
       if (isRangeMode && selectedDates.length === 2) {
-        // 处理日期范围选择
+        // 날짜 범위 선택 처리
         const startDate = formatDateForAPI(selectedDates[0]);
         const endDate = formatDateForAPI(selectedDates[1]);
         loadPapersByDateRange(startDate, endDate);
         toggleDatePicker();
       } else if (!isRangeMode && selectedDates.length === 1) {
-        // 处理单个日期选择
+        // 단일 날짜 선택 처리
         const selectedDate = formatDateForAPI(selectedDates[0]);
         if (availableDates.includes(selectedDate)) {
           loadPapersByDateRange(selectedDate, selectedDate);
@@ -232,7 +232,7 @@ function initDatePicker() {
     }
   });
   
-  // 隐藏日期输入框
+  // 날짜 입력란 숨기기
   const inputElement = document.querySelector('.flatpickr-input');
   if (inputElement) {
     inputElement.style.display = 'none';
@@ -254,7 +254,7 @@ function toggleRangeMode() {
 }
 
 async function loadPapersByDateRange(startDate, endDate) {
-  // 获取日期范围内的所有有效日期
+  // 날짜 범위 내의 모든 유효한 날짜 가져오기
   const validDatesInRange = availableDates.filter(date => {
     return date >= startDate && date <= endDate;
   });
@@ -281,32 +281,32 @@ async function loadPapersByDateRange(startDate, endDate) {
   `;
   
   try {
-    // 加载所有日期的论文数据
+    // 모든 날짜의 논문 데이터 로드
     const allPaperData = {};
-    allPapersData = []; // 重置全局论文数据
+    allPapersData = []; // 전역 논문 데이터 초기화
     
     for (const date of validDatesInRange) {
       const selectedLanguage = selectLanguageForDate(date);
-      // 从 data 分支获取数据文件
+      // data 브랜치에서 데이터 파일 가져오기
       const dataUrl = DATA_CONFIG.getDataUrl(`data/${date}_AI_enhanced_${selectedLanguage}.jsonl`);
       const response = await fetch(dataUrl);
       const text = await response.text();
       const dataPapers = parseJsonlData(text, date);
       
-      // 合并数据
+      // 데이터 병합
       Object.keys(dataPapers).forEach(category => {
         if (!allPaperData[category]) {
           allPaperData[category] = [];
         }
         allPaperData[category] = allPaperData[category].concat(dataPapers[category]);
-        // 将论文添加到全局数组
+        // 논문을 전역 배열에 추가
         allPapersData = allPapersData.concat(dataPapers[category]);
       });
     }
     
     paperData = allPaperData;
 
-    // 提取所有论文标题
+    // 모든 논문 제목 추출
     const allTitle = [];
     Object.keys(paperData).forEach(category => {
       paperData[category].forEach(paper => {
@@ -314,26 +314,26 @@ async function loadPapersByDateRange(startDate, endDate) {
       });
     });
 
-    // 提取关键词并进行总结
+    // 키워드 추출 및 요약
     const extractKeywords = (text) => {
-      // 移除特殊字符和多余空格
+      // 특수 문자 및 불필요한 공백 제거
       const cleanText = text.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
       
-      // 使用 compromise 进行文本处理
+      // compromise 라이브러리를 사용한 텍스트 처리
       const doc = nlp(cleanText);
       
-      // 提取名词短语和重要词汇
+      // 명사구 및 중요 어휘 추출
       const terms = new Set();
       
-      // 提取名词短语
+      // 명사구 추출
       doc.match('#Noun+').forEach(match => {
         const phrase = match.text().toLowerCase();
-        if (phrase.split(' ').length <= 3) { // 最多3个词的短语
+        if (phrase.split(' ').length <= 3) { // 최대 3단어 구문
           terms.add(phrase);
         }
       });
       
-      // 提取形容词+名词组合
+      // 형용사+명사 조합 추출
       doc.match('(#Adjective+ #Noun+)').forEach(match => {
         const phrase = match.text().toLowerCase();
         if (phrase.split(' ').length <= 3) {
@@ -341,7 +341,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         }
       });
       
-      // 定义停用词
+      // 불용어(Stopwords) 정의
       const stopWords = new Set([
         'the', 'is', 'at', 'which', 'and', 'or', 'in', 'to', 'for', 'of', 
         'with', 'by', 'on', 'this', 'that', 'our', 'method', 'based', 
@@ -354,62 +354,62 @@ async function loadPapersByDateRange(startDate, endDate) {
         'ai', 'ml', 'dl'
       ]);
       
-      // 过滤停用词和短词
+      // 불용어 및 짧은 단어 필터링
       const filteredTerms = Array.from(terms).filter(term => {
         const words = term.split(' ');
         return words.every(word => word.length > 2) && 
                !words.every(word => stopWords.has(word));
       });
       
-      // 统计词频
+      // 단어 빈도 집계
       const termFreq = {};
       filteredTerms.forEach(term => {
         termFreq[term] = (termFreq[term] || 0) + 1;
-        // 给多词短语更高的权重
+        // 다중 단어 구문에 더 높은 가중치 부여
         if (term.includes(' ')) {
           termFreq[term] *= 1.5;
         }
       });
       
-      // 计算 TF 值（词频）
+      // TF 값(단어 빈도) 계산
       const tfScores = {};
       const totalTerms = Object.values(termFreq).reduce((a, b) => a + b, 0);
       Object.entries(termFreq).forEach(([term, freq]) => {
         tfScores[term] = freq / totalTerms;
       });
       
-      // 按 TF 值排序并返回前10个关键词/短语
+      // TF 값 기준으로 정렬하여 상위 10개 키워드/구문 반환
       return Object.entries(tfScores)
         .sort(([,a], [,b]) => b - a)
         .slice(0, 10)
         .map(([term]) => term);
     };
 
-    // 处理所有摘要
+    // 모든 요약문 처리
     const allKeywords = new Map();
-    const keywordTrends = new Map(); // 添加关键词趋势数据结构
+    const keywordTrends = new Map(); // 키워드 트렌드 데이터 구조 추가
     
-    // 初始化日期数据结构
+    // 날짜 데이터 구조 초기화
     validDatesInRange.forEach(date => {
       keywordTrends.set(date, new Map());
     });
     
-    // 按日期统计关键词
+    // 날짜별 키워드 집계
     allTitle.forEach((abstract, index) => {
       const date = validDatesInRange[Math.floor(index / (allTitle.length / validDatesInRange.length))];
       const keywords = extractKeywords(abstract);
       
       keywords.forEach(keyword => {
-        // 更新总体统计
+        // 전체 통계 업데이트
         allKeywords.set(keyword, (allKeywords.get(keyword) || 0) + 1);
         
-        // 更新日期维度统计
+        // 날짜별 차원 통계 업데이트
         const dateStats = keywordTrends.get(date);
         dateStats.set(keyword, (dateStats.get(keyword) || 0) + 1);
       });
     });
 
-    // 生成关键词云数据
+    // 키워드 클라우드 데이터 생성
     const keywordCloudData = Array.from(allKeywords.entries())
       .filter(([, count]) => count > 1)
       .sort(([,a], [,b]) => b - a)
@@ -419,19 +419,19 @@ async function loadPapersByDateRange(startDate, endDate) {
         size: Math.max(12, Math.min(50, count * 3))
       }));
 
-    // 准备折线图数据
+    // 꺾은선형 차트 데이터 준비
     const top10Keywords = keywordCloudData.slice(0, 10).map(d => d.text);
     const trendData = top10Keywords.map(keyword => {
       return {
         keyword: keyword,
         values: Array.from(keywordTrends.entries()).map(([date, stats]) => ({
-          date: new Date(date + 'T00:00:00Z'),  // 确保日期被正确解析，添加时间部分
+          date: new Date(date + 'T00:00:00Z'),  // 날짜가 올바르게 파싱되도록 시간 부분 추가
           count: stats.get(keyword) || 0
-        })).sort((a, b) => a.date - b.date)  // 确保数据按日期排序
+        })).sort((a, b) => a.date - b.date)  // 데이터가 날짜순으로 정렬되도록 보장
       };
     });
 
-    // 创建可视化展示
+    // 시각화 생성
     container.innerHTML = `
       <div class="statistics-section">
         <h2>
@@ -466,10 +466,10 @@ async function loadPapersByDateRange(startDate, endDate) {
       </div>
     `;
 
-    // 只在日期范围模式下创建趋势图
+    // 날짜 범위 모드에서만 트렌드 차트 생성
     if (startDate !== endDate) {
-      // 创建折线图
-      const margin = {top: 20, right: 180, bottom: 80, left: 60}; // 增加底部边距以适应更长的日期标签
+      // 꺾은선형 차트 생성
+      const margin = {top: 20, right: 180, bottom: 80, left: 60}; // 더 긴 날짜 라벨을 수용하기 위해 하단 여백 증가
       const width = document.getElementById('trendChart').offsetWidth - margin.left - margin.right;
       const height = 400 - margin.top - margin.bottom;
 
@@ -480,7 +480,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .append('g')
           .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      // 设置比例尺
+      // 스케일(척도) 설정
       const x = d3.scaleTime()
         .domain(d3.extent(validDatesInRange, d => new Date(d)))
         .range([0, width]);
@@ -489,12 +489,12 @@ async function loadPapersByDateRange(startDate, endDate) {
         .domain([0, d3.max(trendData, d => d3.max(d.values, v => v.count))])
         .range([height, 0]);
 
-      // 创建颜色比例尺，使用更柔和的颜色
+      // 더 부드러운 색상을 사용하는 색상 스케일 생성
       const color = d3.scaleOrdinal()
         .range(['#4e79a7', '#f28e2c', '#59a14f', '#e15759', '#76b7b2', 
                 '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab']);
 
-      // 添加X轴网格线
+      // X축 격자선 추가
       svg.append('g')
         .attr('class', 'grid')
         .attr('transform', `translate(0,${height})`)
@@ -505,7 +505,7 @@ async function loadPapersByDateRange(startDate, endDate) {
           .tickSize(-height)
           .tickFormat(''));
 
-      // 添加Y轴网格线
+      // Y축 격자선 추가
       svg.append('g')
         .attr('class', 'grid')
         .style('stroke-dasharray', '3,3')
@@ -514,29 +514,29 @@ async function loadPapersByDateRange(startDate, endDate) {
           .tickSize(-width)
           .tickFormat(''));
 
-      // 添加一个函数来确定合适的日期格式
+      // 적절한 날짜 형식을 결정하는 함수 추가
       function determineDateFormat(dates) {
         const startDate = new Date(dates[0]);
         const endDate = new Date(dates[dates.length - 1]);
         
-        // 检查是否跨年
+        // 연도가 바뀌는지 확인
         const sameYear = startDate.getFullYear() === endDate.getFullYear();
-        // 检查是否在同一个月
+        // 같은 달인지 확인
         const sameMonth = sameYear && startDate.getMonth() === endDate.getMonth();
         
         if (sameMonth) {
-          return d3.timeFormat("%d"); // 只显示日
+          return d3.timeFormat("%d"); // 일만 표시
         } else if (sameYear) {
-          return d3.timeFormat("%m-%d"); // 显示月-日
+          return d3.timeFormat("%m-%d"); // 월-일 표시
         } else {
-          return d3.timeFormat("%Y-%m-%d"); // 显示完整日期
+          return d3.timeFormat("%Y-%m-%d"); // 전체 날짜 표시
         }
       }
 
-      // 获取日期格式化函数
+      // 날짜 포맷 함수 가져오기
       const dateFormat = determineDateFormat(validDatesInRange);
       
-      // 添加X轴
+      // X축 추가
       svg.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height})`)
@@ -551,7 +551,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-      // 添加Y轴
+      // Y축 추가
       svg.append('g')
         .attr('class', 'y-axis')
         .call(d3.axisLeft(y)
@@ -560,7 +560,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .style("font-size", "12px")
         .style("fill", "#666");
 
-      // 添加Y轴标题
+      // Y축 제목 추가
       svg.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", 0 - margin.left)
@@ -571,7 +571,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .style("font-size", "12px")
         .text("Frequency");
 
-      // 添加X轴标题，显示年份和月份（如果被省略的话）
+      // X축 제목 추가, 연도 및 월 표시(생략된 경우)
       const startDate = new Date(validDatesInRange[0]);
       const endDate = new Date(validDatesInRange[validDatesInRange.length - 1]);
       let xAxisTitle = "";
@@ -593,25 +593,25 @@ async function loadPapersByDateRange(startDate, endDate) {
           .text(xAxisTitle);
       }
 
-      // 加粗坐标轴线条
+      // 좌표축 선 굵게 설정
       svg.selectAll('.x-axis path, .y-axis path, .x-axis line, .y-axis line')
         .style('stroke', '#666')
         .style('stroke-width', '1.5px');
 
-      // 定义面积生成器
+      // 영역(Area) 생성기 정의
       const area = d3.area()
         .x(d => x(d.date))
         .y0(height)
         .y1(d => y(d.count))
-        .curve(d3.curveBasis); // 使用更平滑的曲线
+        .curve(d3.curveBasis); // 더 부드러운 곡선 사용
 
-      // 定义线条生成器
+      // 선(Line) 생성기 정의
       const line = d3.line()
         .x(d => x(d.date))
         .y(d => y(d.count))
-        .curve(d3.curveBasis); // 使用相同的平滑曲线
+        .curve(d3.curveBasis); // 동일한 부드러운 곡선 사용
 
-      // 添加渐变定义
+      // 그라데이션 정의 추가
       const gradient = svg.append("defs")
         .selectAll("linearGradient")
         .data(trendData)
@@ -633,7 +633,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .attr("stop-color", d => color(d.keyword))
         .attr("stop-opacity", 0.05);
 
-      // 绘制面积
+      // 영역 그리기
       const areas = svg.selectAll('.area')
         .data(trendData)
         .enter()
@@ -643,7 +643,7 @@ async function loadPapersByDateRange(startDate, endDate) {
           .style('fill', (d, i) => `url(#gradient-${i})`)
           .style('opacity', 0.7);
 
-      // 绘制折线
+      // 꺾은선 그리기
       const paths = svg.selectAll('.line')
         .data(trendData)
         .enter()
@@ -655,7 +655,7 @@ async function loadPapersByDateRange(startDate, endDate) {
           .style('stroke-width', 2)
           .style('opacity', 0.8);
 
-      // 添加图例
+      // 범례 추가
       const legend = svg.selectAll('.legend')
         .data(trendData)
         .enter()
@@ -677,16 +677,16 @@ async function loadPapersByDateRange(startDate, endDate) {
         .style('font-size', '12px')
         .style('alignment-baseline', 'middle');
 
-      // 添加交互效果
+      // 인터랙션 효과 추가
       legend.style('cursor', 'pointer')
         .on('mouseover', function(event, d) {
           const keyword = d.keyword;
           
-          // 降低其他线条和区域的透明度
+          // 다른 선과 영역의 투명도 낮추기
           areas.style('opacity', 0.1);
           paths.style('opacity', 0.1);
           
-          // 高亮当前选中的线条和区域
+          // 현재 선택된 선과 영역 강조
           svg.selectAll('.area')
             .filter(p => p.keyword === keyword)
             .style('opacity', 0.9);
@@ -697,7 +697,7 @@ async function loadPapersByDateRange(startDate, endDate) {
             .style('stroke-width', 3);
         })
         .on('mouseout', function() {
-          // 恢复原始状态
+          // 원래 상태 복원
           areas.style('opacity', 0.7);
           paths.style('opacity', 0.8)
             .style('stroke-width', 2);
@@ -705,7 +705,7 @@ async function loadPapersByDateRange(startDate, endDate) {
     }
     
   } catch (error) {
-    console.error('加载论文数据失败:', error);
+    console.error('논문 데이터 로드 실패:', error);
     container.innerHTML = `
       <div class="loading-container">
         <p>Loading data fails. Please retry.</p>
@@ -753,7 +753,7 @@ function parseJsonlData(jsonlText, date) {
         conclusion: paper.AI && paper.AI.conclusion ? paper.AI.conclusion : ''
       });
     } catch (error) {
-      console.error('解析JSON行失败:', error, line);
+      console.error('JSON 라인 파싱 실패:', error, line);
     }
   });
   
@@ -769,22 +769,22 @@ function formatDate(dateString) {
   });
 }
 
-// 修改 showRelatedPapers 函数中生成论文卡片的部分
+// showRelatedPapers 함수에서 논문 카드 생성 부분 수정
 function showRelatedPapers(keyword) {
     const sidebar = document.getElementById('paperSidebar');
     const selectedKeywordElement = document.getElementById('selectedKeyword');
     const relatedPapersContainer = document.getElementById('relatedPapers');
     
-    // 更新关键词显示
+    // 키워드 표시 업데이트
     selectedKeywordElement.textContent = 'Keyword: ' + keyword;
     
-    // 查找包含关键词的论文
+    // 키워드를 포함하는 논문 검색
     const relatedPapers = allPapersData.filter(paper => {
         const searchText = (paper.title + ' ' + paper.summary).toLowerCase();
         return searchText.includes(keyword.toLowerCase());
     });
     
-    // 生成相关论文的HTML
+    // 관련 논문 HTML 생성
     const papersHTML = relatedPapers.map((paper, index) => `
         <div class="paper-card">
             <div class="paper-number">${index + 1}</div>
@@ -797,16 +797,16 @@ function showRelatedPapers(keyword) {
         </div>
     `).join('');
     
-    // 更新侧边栏内容
+    // 사이드바 내용 업데이트
     relatedPapersContainer.innerHTML = relatedPapers.length > 0 
         ? papersHTML 
         : '<p>No related papers found.</p>';
     
-    // 显示侧边栏
+    // 사이드바 표시
     sidebar.classList.add('active');
 }
 
-// 添加新函数：关闭侧边栏
+// 새 함수 추가: 사이드바 닫기
 function closeSidebar() {
   const sidebar = document.getElementById('paperSidebar');
   sidebar.classList.remove('active');

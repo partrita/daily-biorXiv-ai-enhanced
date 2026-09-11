@@ -1,7 +1,8 @@
 arxiv:
-  categories:  # 文章类型
-    - cs.CV
-    - cs.CL
+  categories:  # 논문 카테고리
+    - q-bio.BM
+    - q-bio.CB
+    - q-bio.QM
 
 llm:
-  model_name: 'deepseek-chat'  # 使用的LLM模型
+  model_name: 'gemini-2.5-flash'  # 사용할 LLM 모델
