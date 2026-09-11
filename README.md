@@ -42,31 +42,53 @@ https://github.com/user-attachments/assets/b25712a4-fb8d-484f-863d-e8da6922f9d7
 
 
 
-# How to use
-This repo will daily crawl arXiv papers about **cs.CV, cs.GR, cs.CL, cs.AI, cs.CE, cs.GT, cs.IT, cs.LG**, and use **DeepSeek** to summarize the papers in **Chinese**.
-If you wish to crawl other arXiv categories, use other LLMs, or other languages, please follow the instructions.
-Otherwise, you can watch the video above first and directly use this repo in https://dw-dengwei.github.io/daily-arXiv-ai-enhanced/. Please star it if you like :)
+# How to use / 사용 가이드
 
-<details>
-   <summary> If you want to customize categories, LLMs, or languages, click here.  </summary>
+이 저장소를 **Fork(포크)**하여 자신만의 맞춤형 논문 수집 및 AI 요약 웹사이트를 무료로 운영할 수 있습니다.
 
-## Instructions
-1. Fork this repo to your own account and delete my own information in [buy-me-a-coffee](./buy-me-a-coffee/README.md).
-2. Go to: your-own-repo -> Settings -> Secrets and variables -> Actions
-3. Go to Secrets. Secrets are encrypted and used for sensitive data
-4. Create two repository secrets named `OPENAI_API_KEY` and `OPENAI_BASE_URL`, and input corresponding values.
-5. [Optional] Set a password in `secrets.ACCESS_PASSWORD` if you do not wish others to access your page. (see https://github.com/dw-dengwei/daily-arXiv-ai-enhanced/pull/64)
-6. Go to Variables. Variables are shown as plain text and are used for non-sensitive data
-7. Create the following repository variables:
-   1. `CATEGORIES`: separate the categories with ",", such as "cs.CL, cs.CV"
-   2. `LANGUAGE`: such as "Chinese" or "English"
-   3. `MODEL_NAME`: such as "deepseek-chat"
-   4. `EMAIL`: your email for push to GitHub
-   5. `NAME`: your name for push to GitHub
-8. Go to your-own-repo -> Actions -> arXiv-daily-ai-enhanced
-9. You can manually click **Run workflow** to test if it works well (it may take about one hour). By default, this action will automatically run every day. You can modify it in `.github/workflows/run.yml`
-10. Set up GitHub pages: Go to your own repo -> Settings -> Pages. In `Build and deployment`, set `Source="GitHub Actions"`. The GitHub Action will automatically build and deploy your site to GitHub Pages! Wait for a few minutes and visit `https://<username>.github.io/daily-arXiv-ai-enhanced/`.
-</details>
+---
+
+## 🛠️ 포크 후 설정 가이드 (Setup Guide)
+
+### 1단계: 저장소 포크 (Fork)
+1. 우측 상단의 **Fork** 버튼을 눌러 내 GitHub 계정으로 저장소를 복제합니다.
+
+---
+
+### 2단계: GitHub Variables 설정 (⭐ 중요: 검색 키워드 및 환경 설정)
+저장소 상단 **Settings ➡️ Secrets and variables ➡️ Actions ➡️ Variables 탭**으로 이동하여 **`New repository variable`** 버튼을 눌러 아래 변수들을 등록합니다:
+
+| 변수명 (Variable Name) | 필수 여부 | 설명 및 예시 |
+| :--- | :---: | :--- |
+| **`CATEGORIES`** | **필수** | **수집할 검색 키워드 목록 (쉼표 `,`로 구분)**<br>• 예시: `de novo design, antibody design, protein design`<br>• 따옴표 없이 입력하며, 각 키워드별 bioRxiv 최신 논문이 수집됩니다. |
+| **`LANGUAGE`** | **필수** | **AI 요약 언어**<br>• 기본값: `Korean` (또는 `English` 등) |
+| **`MODEL_NAME`** | **필수** | **사용할 LLM 모델명**<br>• 예시: `gemini-2.5-flash` (또는 `deepseek-chat`, `gpt-4o-mini`) |
+| **`EMAIL`** | **필수** | **GitHub Actions 커밋용 이메일** (예: `your-email@example.com`) |
+| **`NAME`** | **필수** | **GitHub Actions 커밋용 이름** (예: `your-github-username`) |
+
+---
+
+### 3단계: GitHub Secrets 설정 (API 키)
+**Settings ➡️ Secrets and variables ➡️ Actions ➡️ Secrets 탭**으로 이동하여 **`New repository secret`**을 등록합니다:
+
+| 시크릿명 (Secret Name) | 필수 여부 | 설명 |
+| :--- | :---: | :--- |
+| **`OPENAI_API_KEY`** | **필수** | LLM API 키 (Gemini 또는 OpenAI / DeepSeek API 키) |
+| **`OPENAI_BASE_URL`** | **선택** | OpenAI 호환 엔드포인트 URL (기본값: `https://api.openai.com/v1`, Gemini/DeepSeek 호환 URL 사용 시 설정) |
+| **`ACCESS_PASSWORD`** | **선택** | 웹페이지 비밀번호 보호 기능 (비워두면 누구나 접근 가능) |
+
+---
+
+### 4단계: GitHub Pages 활성화
+1. 저장소 상단의 **Settings ➡️ Pages**로 이동합니다.
+2. **Build and deployment** 섹션의 **Source** 드롭다운에서 **`GitHub Actions`**를 선택합니다.
+
+---
+
+### 5단계: 첫 실행 (Run Workflow)
+1. 저장소 상단의 **Actions 탭 ➡️ `arXiv-daily-ai-enhanced`**를 클릭합니다.
+2. 우측의 **Run workflow** 드롭다운을 열고 버튼을 누릅니다.
+3. 워크플로우가 완료되면 `https://<username>.github.io/daily-arXiv-ai-enhanced/`에서 나만의 논문 큐레이션 웹페이지를 확인할 수 있습니다. (이후 매일 지정된 시간에 자동 실행됩니다)
 
 # Contributors
 Thanks to the following special contributors for contributing code, discovering bugs, and sharing useful ideas for this project!!!
