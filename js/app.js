@@ -1102,8 +1102,6 @@ function renderPapers() {
   
   // 일치하는 논문 집합 생성
   let filteredPapers = [...papers];
-  // ponytail: 날짜 내림차순 선행 정렬, 이후 매치 정렬이 stable이라 그룹 내 날짜순 유지
-  filteredPapers.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // 이전 렌더링 잔여물 방지를 위해 모든 논문의 일치 상태 초기화
   filteredPapers.forEach(p => {
@@ -1333,25 +1331,21 @@ function renderPapers() {
     return;
   }
   
-  const table = document.createElement('table');
-  table.className = 'paper-table';
-  table.innerHTML = `<thead><tr><th>#</th><th>날짜</th><th>제목</th><th>저자</th><th>카테고리</th></tr></thead><tbody></tbody>`;
-  const tbody = table.querySelector('tbody');
-  container.appendChild(table);
-
   filteredPapers.forEach((paper, index) => {
-    const tr = document.createElement('tr');
+    const paperCard = document.createElement('div');
     // 일치 하이라이트 클래스 추가
+    paperCard.className = `paper-card ${paper.isMatched ? 'matched-paper' : ''}`;
+    paperCard.dataset.id = paper.id || paper.url;
+    
     if (paper.isMatched) {
-      tr.className = 'matched-paper';
       // 일치 사유 툴팁 추가
-      tr.title = `일치: ${paper.matchReason.join(' | ')}`;
+      paperCard.title = `일치: ${paper.matchReason.join(' | ')}`;
     }
-
-    const categoryTags = paper.allCategories ?
-      paper.allCategories.map(cat => `<span class="category-tag">${cat}</span>`).join('') :
+    
+    const categoryTags = paper.allCategories ? 
+      paper.allCategories.map(cat => `<span class="category-tag">${cat}</span>`).join('') : 
       `<span class="category-tag">${paper.category}</span>`;
-
+    
     // 하이라이트할 단어 조합: 키워드 + 텍스트 검색
     const titleSummaryTerms = [];
     if (activeKeywords.length > 0) {
@@ -1361,33 +1355,66 @@ function renderPapers() {
       titleSummaryTerms.push(textSearchQuery.trim());
     }
 
-    // 제목 하이라이트 (키워드 및 텍스트 검색)
-    const highlightedTitle = titleSummaryTerms.length > 0
-      ? highlightMatches(paper.title, titleSummaryTerms, 'keyword-highlight')
+    // 제목 및 초록 하이라이트 (키워드 및 텍스트 검색)
+    const highlightedTitle = titleSummaryTerms.length > 0 
+      ? highlightMatches(paper.title, titleSummaryTerms, 'keyword-highlight') 
       : paper.title;
+    const highlightedSummary = titleSummaryTerms.length > 0 
+      ? highlightMatches(paper.summary, titleSummaryTerms, 'keyword-highlight') 
+      : paper.summary;
 
     // 저자 하이라이트 (저자 필터 + 텍스트 검색)
     const authorTerms = [];
     if (activeAuthors.length > 0) authorTerms.push(...activeAuthors);
     if (textSearchQuery && textSearchQuery.trim().length > 0) authorTerms.push(textSearchQuery.trim());
-
+    
     // 저자 목록 서식 지정 (생략 규칙 및 하이라이트 적용)
     const formattedAuthors = formatAuthorsForCard(paper.authors, authorTerms);
+    
+    // GitHub 버튼 HTML 생성
+    // let githubHtml = '';
+    // if (paper.code_url) {
+    //   const stars = paper.code_stars ? `<span class="github-stars">★ ${paper.code_stars}</span>` : '';
+    //   const isHot = paper.code_stars > 100;
+      
+    //   githubHtml = `
+    //     <a href="${paper.code_url}" target="_blank" class="github-link" title="View Code" onclick="event.stopPropagation()">
+    //       <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: text-bottom; margin-right: 4px;">
+    //         <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+    //       </svg>
+    //       Code ${stars}
+    //       ${isHot ? '<span class="hot-icon">🔥</span>' : ''}
+    //     </a>
+    //   `;
+    // }
 
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td style="white-space:nowrap">${formatDate(paper.date)}</td>
-      <td>${highlightedTitle}</td>
-      <td>${formattedAuthors}</td>
-      <td style="white-space:nowrap">${categoryTags}</td>
+    paperCard.innerHTML = `
+      <div class="paper-card-index">${index + 1}</div>
+      ${paper.isMatched ? '<div class="match-badge" title="검색 조건과 일치함"></div>' : ''}
+      <div class="paper-card-header">
+        <h3 class="paper-card-title">${highlightedTitle}</h3>
+        <p class="paper-card-authors">${formattedAuthors}</p>
+        <div class="paper-card-categories">
+          ${categoryTags}
+        </div>
+      </div>
+      <div class="paper-card-body">
+        <p class="paper-card-summary">${highlightedSummary}</p>
+        <div class="paper-card-footer">
+          <div class="footer-left">
+            <span class="paper-card-date">${formatDate(paper.date)}</span>
+          </div>
+          <span class="paper-card-link">Details</span>
+        </div>
+      </div>
     `;
-
-    tr.addEventListener('click', () => {
+    
+    paperCard.addEventListener('click', () => {
       currentPaperIndex = index; // 현재 클릭한 논문 인덱스 기록
       showPaperDetails(paper, index + 1);
     });
-
-    tbody.appendChild(tr);
+    
+    container.appendChild(paperCard);
   });
 }
 

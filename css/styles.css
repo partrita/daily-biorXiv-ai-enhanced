@@ -609,14 +609,6 @@ main {
   gap: 20px;
 }
 
-/* 논문 테이블뷰 (네이티브 table) */
-.paper-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 14px; }
-.paper-table th, .paper-table td { border-bottom: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: top; }
-.paper-table thead th { white-space: nowrap; }
-.paper-table tbody tr { cursor: pointer; }
-.paper-table tbody tr:hover { background: var(--background-light); }
-.paper-table tr.matched-paper { background: rgba(102,126,234,.06); }
-
 /* 논문 카드 - 그리드 뷰 */
 .paper-card {
   background-color: var(--card-bg-color);
