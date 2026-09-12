@@ -434,23 +434,9 @@ function initEventListeners() {
   
   document.querySelector('.paper-modal').addEventListener('click', (event) => {
     const modal = document.querySelector('.paper-modal');
-    const pdfContainer = modal.querySelector('.pdf-container');
-    
     // 모달 배경을 클릭한 경우
     if (event.target === modal) {
-      // PDF가 확대 상태인지 확인
-      if (pdfContainer && pdfContainer.classList.contains('expanded')) {
-        // PDF가 확대 상태라면 먼저 보통 크기로 복원
-        const expandButton = modal.querySelector('.pdf-expand-btn');
-        if (expandButton) {
-          togglePdfSize(expandButton);
-        }
-        // 이벤트 전파를 중지하여 모달 전체가 닫히는 것을 방지
-        event.stopPropagation();
-      } else {
-        // PDF가 확대 상태가 아니면 모달 전체 닫기
-        closeModal();
-      }
+      closeModal();
     }
   });
   
@@ -1116,6 +1102,8 @@ function renderPapers() {
   
   // 일치하는 논문 집합 생성
   let filteredPapers = [...papers];
+  // ponytail: 날짜 내림차순 선행 정렬, 이후 매치 정렬이 stable이라 그룹 내 날짜순 유지
+  filteredPapers.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // 이전 렌더링 잔여물 방지를 위해 모든 논문의 일치 상태 초기화
   filteredPapers.forEach(p => {
@@ -1345,21 +1333,25 @@ function renderPapers() {
     return;
   }
   
+  const table = document.createElement('table');
+  table.className = 'paper-table';
+  table.innerHTML = `<thead><tr><th>#</th><th>날짜</th><th>제목</th><th>저자</th><th>카테고리</th></tr></thead><tbody></tbody>`;
+  const tbody = table.querySelector('tbody');
+  container.appendChild(table);
+
   filteredPapers.forEach((paper, index) => {
-    const paperCard = document.createElement('div');
+    const tr = document.createElement('tr');
     // 일치 하이라이트 클래스 추가
-    paperCard.className = `paper-card ${paper.isMatched ? 'matched-paper' : ''}`;
-    paperCard.dataset.id = paper.id || paper.url;
-    
     if (paper.isMatched) {
+      tr.className = 'matched-paper';
       // 일치 사유 툴팁 추가
-      paperCard.title = `일치: ${paper.matchReason.join(' | ')}`;
+      tr.title = `일치: ${paper.matchReason.join(' | ')}`;
     }
-    
-    const categoryTags = paper.allCategories ? 
-      paper.allCategories.map(cat => `<span class="category-tag">${cat}</span>`).join('') : 
+
+    const categoryTags = paper.allCategories ?
+      paper.allCategories.map(cat => `<span class="category-tag">${cat}</span>`).join('') :
       `<span class="category-tag">${paper.category}</span>`;
-    
+
     // 하이라이트할 단어 조합: 키워드 + 텍스트 검색
     const titleSummaryTerms = [];
     if (activeKeywords.length > 0) {
@@ -1369,66 +1361,33 @@ function renderPapers() {
       titleSummaryTerms.push(textSearchQuery.trim());
     }
 
-    // 제목 및 초록 하이라이트 (키워드 및 텍스트 검색)
-    const highlightedTitle = titleSummaryTerms.length > 0 
-      ? highlightMatches(paper.title, titleSummaryTerms, 'keyword-highlight') 
+    // 제목 하이라이트 (키워드 및 텍스트 검색)
+    const highlightedTitle = titleSummaryTerms.length > 0
+      ? highlightMatches(paper.title, titleSummaryTerms, 'keyword-highlight')
       : paper.title;
-    const highlightedSummary = titleSummaryTerms.length > 0 
-      ? highlightMatches(paper.summary, titleSummaryTerms, 'keyword-highlight') 
-      : paper.summary;
 
     // 저자 하이라이트 (저자 필터 + 텍스트 검색)
     const authorTerms = [];
     if (activeAuthors.length > 0) authorTerms.push(...activeAuthors);
     if (textSearchQuery && textSearchQuery.trim().length > 0) authorTerms.push(textSearchQuery.trim());
-    
+
     // 저자 목록 서식 지정 (생략 규칙 및 하이라이트 적용)
     const formattedAuthors = formatAuthorsForCard(paper.authors, authorTerms);
-    
-    // GitHub 버튼 HTML 생성
-    // let githubHtml = '';
-    // if (paper.code_url) {
-    //   const stars = paper.code_stars ? `<span class="github-stars">★ ${paper.code_stars}</span>` : '';
-    //   const isHot = paper.code_stars > 100;
-      
-    //   githubHtml = `
-    //     <a href="${paper.code_url}" target="_blank" class="github-link" title="View Code" onclick="event.stopPropagation()">
-    //       <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: text-bottom; margin-right: 4px;">
-    //         <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-    //       </svg>
-    //       Code ${stars}
-    //       ${isHot ? '<span class="hot-icon">🔥</span>' : ''}
-    //     </a>
-    //   `;
-    // }
 
-    paperCard.innerHTML = `
-      <div class="paper-card-index">${index + 1}</div>
-      ${paper.isMatched ? '<div class="match-badge" title="검색 조건과 일치함"></div>' : ''}
-      <div class="paper-card-header">
-        <h3 class="paper-card-title">${highlightedTitle}</h3>
-        <p class="paper-card-authors">${formattedAuthors}</p>
-        <div class="paper-card-categories">
-          ${categoryTags}
-        </div>
-      </div>
-      <div class="paper-card-body">
-        <p class="paper-card-summary">${highlightedSummary}</p>
-        <div class="paper-card-footer">
-          <div class="footer-left">
-            <span class="paper-card-date">${formatDate(paper.date)}</span>
-          </div>
-          <span class="paper-card-link">Details</span>
-        </div>
-      </div>
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td style="white-space:nowrap">${formatDate(paper.date)}</td>
+      <td>${highlightedTitle}</td>
+      <td>${formattedAuthors}</td>
+      <td style="white-space:nowrap">${categoryTags}</td>
     `;
-    
-    paperCard.addEventListener('click', () => {
+
+    tr.addEventListener('click', () => {
       currentPaperIndex = index; // 현재 클릭한 논문 인덱스 기록
       showPaperDetails(paper, index + 1);
     });
-    
-    container.appendChild(paperCard);
+
+    tbody.appendChild(tr);
   });
 }
 
@@ -1521,21 +1480,9 @@ function showPaperDetails(paper, paperIndex) {
       
       ${highlightedAbstract ? `<h3>Abstract</h3><p class="original-abstract">${highlightedAbstract}</p>` : ''}
       
-      <div class="pdf-preview-section">
-        <div class="pdf-header">
-          <h3>PDF Preview</h3>
-          <button class="pdf-expand-btn" onclick="togglePdfSize(this)">
-            <svg class="expand-icon" viewBox="0 0 24 24" width="24" height="24">
-              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-            <svg class="collapse-icon" viewBox="0 0 24 24" width="24" height="24" style="display: none;">
-              <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-            </svg>
-          </button>
-        </div>
-        <div class="pdf-container">
-          <iframe src="${paper.url.replace('abs', 'pdf')}" width="100%" height="800px" frameborder="0"></iframe>
-        </div>
+      <div>
+        <h3>Full Text</h3>
+        <p><a href="${paper.pdf || paper.url}" target="_blank" rel="noopener">PDF 열기 (새 창)</a> · <a href="${paper.url}" target="_blank" rel="noopener">bioRxiv 페이지 열기 (새 창)</a></p>
       </div>
     </div>
   `;
@@ -1543,8 +1490,8 @@ function showPaperDetails(paper, paperIndex) {
   // Update modal content
   document.getElementById('modalBody').innerHTML = modalContent;
   document.getElementById('paperLink').href = paper.url;
-  document.getElementById('pdfLink').href = paper.url.replace('abs', 'pdf');
-  document.getElementById('htmlLink').href = paper.url.replace('abs', 'html');
+  document.getElementById('pdfLink').href = paper.pdf || paper.url;
+  document.getElementById('htmlLink').href = paper.url;
   
   // --- GitHub Button Logic ---
   const githubLink = document.getElementById('githubLink');

@@ -33,14 +33,6 @@ This innovative tool transforms how you stay updated with arXiv papers by combin
 - One-click copy in Settings to export your keywords and authors configuration
 - Seamlessly combine exported preferences with SKILL for reproducible and shareable setups
 
-👉 **[Try it now!](https://dw-dengwei.github.io/daily-biorXiv-explained/)** - No installation required
-
-
-
-https://github.com/user-attachments/assets/b25712a4-fb8d-484f-863d-e8da6922f9d7
-
-
-
 
 # How to use / 사용 가이드
 
@@ -159,11 +151,3 @@ We sincerely thank the following individuals and organizations for their promoti
     </tr>
   </tbody>
 </table>
-
-
-# Star history
-
-[![Stargazers over time](https://starchart.cc/dw-dengwei/daily-biorXiv-explained.svg?variant=adaptive)](https://starchart.cc/dw-dengwei/daily-biorXiv-explained)
-
-# Buy me a coffee
-[here](./buy-me-a-coffee/README.md)

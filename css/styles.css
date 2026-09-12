@@ -609,6 +609,14 @@ main {
   gap: 20px;
 }
 
+/* 논문 테이블뷰 (네이티브 table) */
+.paper-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 14px; }
+.paper-table th, .paper-table td { border-bottom: 1px solid var(--border-color); padding: 10px 12px; text-align: left; vertical-align: top; }
+.paper-table thead th { white-space: nowrap; }
+.paper-table tbody tr { cursor: pointer; }
+.paper-table tbody tr:hover { background: var(--background-light); }
+.paper-table tr.matched-paper { background: rgba(102,126,234,.06); }
+
 /* 논문 카드 - 그리드 뷰 */
 .paper-card {
   background-color: var(--card-bg-color);
@@ -2126,86 +2134,6 @@ footer {
     font-size: 11px;
   }
 
-}
-
-.pdf-preview-section {
-  margin-top: 2rem;
-  border-top: 1px solid #eee;
-  padding-top: 1rem;
-}
-
-.pdf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.pdf-expand-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.pdf-expand-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.pdf-expand-btn svg {
-  fill: #666;
-  transition: fill 0.2s;
-}
-
-.pdf-expand-btn:hover svg {
-  fill: #333;
-}
-
-.pdf-container {
-  transition: all 0.3s ease;
-}
-
-.pdf-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999; /* 모달 위, 펼쳐진 PDF 아래에 위치하도록 보장 */
-}
-
-.pdf-container.expanded {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90vw;
-  height: 90vh;
-  z-index: 1000;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.pdf-container.expanded iframe {
-  height: 100% !important;
-}
-
-.pdf-container {
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-top: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.pdf-container iframe {
-  border-radius: 4px;
-  background: white;
-  display: block;
-  margin: 0 auto;
 }
 
 /* 맨 위로 가기 버튼 스타일 */
