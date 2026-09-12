@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class Structure(BaseModel):
     tldr: str = Field(description="논문의 1-2문장 핵심 요약 (한국어)")
     motivation: str = Field(description="연구 배경 및 해결하고자 하는 문제점/동기 (한국어)")

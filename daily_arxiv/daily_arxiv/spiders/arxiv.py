@@ -1,15 +1,16 @@
-import html
 import json
 import os
 import re
 import urllib.parse
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import ClassVar
+
 import scrapy
 
 
 class ArxivSpider(scrapy.Spider):
     name = "arxiv"
-    allowed_domains = ["biorxiv.org", "ebi.ac.uk", "arxiv.org"]
+    allowed_domains: ClassVar[list[str]] = ["biorxiv.org", "ebi.ac.uk", "arxiv.org"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -18,7 +19,7 @@ class ArxivSpider(scrapy.Spider):
         self.search_queries = queries if queries else ["de novo design"]
 
         # 무료 Quota 절약을 위해 날짜 범위를 최근 2~3일로 엄격히 제한
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         self.end_date = now.strftime("%Y-%m-%d")
         days_back = int(os.environ.get("DAYS_BACK", "3"))
         self.start_date = (now - timedelta(days=days_back)).strftime("%Y-%m-%d")
@@ -50,7 +51,7 @@ class ArxivSpider(scrapy.Spider):
         query = response.meta.get("query", "de novo design")
         try:
             data = json.loads(response.text)
-        except Exception as e:
+        except ValueError as e:
             self.logger.error(f"JSON 파싱 실패 ({response.url}): {e}")
             return
 

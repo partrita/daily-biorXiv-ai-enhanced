@@ -1,32 +1,64 @@
-/* 기본 스타일 */
+/* 기본 스타일 - Rosé Pine Dawn */
 :root {
-  --primary-color: #667eea;
-  --secondary-color: #764ba2;
-  --accent-color: #6d2dad;
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-light: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-  --background-color: #fafbff;
-  --card-bg-color: #ffffff;
-  --background-hover: #f1f5f9;
-  --text-color: #1e293b;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
-  --border-color: #e2e8f0;
-  --border-accent: rgba(102, 126, 234, 0.2);
-  --shadow-sm: 0 1px 3px rgba(102, 126, 234, 0.1);
-  --shadow-md: 0 4px 15px rgba(102, 126, 234, 0.15);
-  --shadow-lg: 0 8px 25px rgba(102, 126, 234, 0.2);
+  color-scheme: light;
+  --primary-color: #286983;
+  --secondary-color: #56949f;
+  --accent-color: #d7827e;
+  --gradient-primary: linear-gradient(135deg, #286983 0%, #56949f 100%);
+  --gradient-light: linear-gradient(135deg, #f4ede8 0%, #f2e9e1 100%);
+  --background-color: #faf4ed;
+  --card-bg-color: #fffaf3;
+  --background-hover: #f2e9e1;
+  --text-color: #575279;
+  --text-secondary: #797593;
+  --text-tertiary: #9893a5;
+  --border-color: #dfdad9;
+  --border-accent: rgba(40, 105, 131, 0.2);
+  --shadow-sm: 0 1px 3px rgba(40, 105, 131, 0.1);
+  --shadow-md: 0 4px 15px rgba(40, 105, 131, 0.15);
+  --shadow-lg: 0 8px 25px rgba(40, 105, 131, 0.2);
   --radius-sm: 8px;
   --radius-md: 12px;
   --transition: all 0.2s ease;
-  --match-highlight: rgba(255, 223, 77, 0.22); /* 더 눈에 띄는 연노란색 배경 */
-  --gold-color: #ffd700;
-  --gold-dark: #d4af37;
-  --gold-gradient: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
-  --author-color: #10b981;
-  --author-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --keyword-color: #8b5cf6;
-  --keyword-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --match-highlight: rgba(234, 157, 52, 0.18); /* 더 눈에 띄는 연노란색 배경 */
+  --gold-color: #ea9d34;
+  --gold-dark: #c9822e;
+  --gold-gradient: linear-gradient(135deg, #ea9d34 0%, #c9822e 100%);
+  --author-color: #56949f;
+  --author-gradient: linear-gradient(135deg, #56949f 0%, #286983 100%);
+  --keyword-color: #907aa9;
+  --keyword-gradient: linear-gradient(135deg, #907aa9 0%, #6f5b87 100%);
+  --love: #b4637a;
+}
+
+/* 다크모드 - Rosé Pine (수동 토글: data-theme, 미지정 시 OS 설정) */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --primary-color: #31748f;
+    --secondary-color: #9ccfd8;
+    --accent-color: #ebbcba;
+    --gradient-primary: linear-gradient(135deg, #31748f 0%, #9ccfd8 100%);
+    --gradient-light: linear-gradient(135deg, #21202e 0%, #26233a 100%);
+    --background-color: #191724;
+    --card-bg-color: #1f1d2e;
+    --background-hover: #26233a;
+    --text-color: #e0def4;
+    --text-secondary: #908caa;
+    --text-tertiary: #6e6a86;
+    --border-color: #403d52;
+    --border-accent: rgba(156, 207, 216, 0.25);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.5);
+    --match-highlight: rgba(246, 193, 119, 0.15);
+    --gold-color: #f6c177;
+    --gold-dark: #e0a458;
+    --gold-gradient: linear-gradient(135deg, #f6c177 0%, #e0a458 100%);
+    --author-color: #9ccfd8;
+    --author-gradient: linear-gradient(135deg, #9ccfd8 0%, #31748f 100%);
+    --keyword-color: #c4a7e7;
+    --keyword-gradient: linear-gradient(135deg, #c4a7e7 0%, #9a7fbe 100%);
+    --love: #eb6f92;
 }
 
 * {
@@ -100,41 +132,7 @@ button {
 }
 
 .icon-button:hover {
-  background-color: rgba(102, 126, 234, 0.1);
-}
-
-/* 뷰 제어 버튼 스타일 */
-.view-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.view-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 2px;
-  color: var(--primary-color);
-  font-size: 14px;
-}
-
-.view-controls .button {
-  border: 1px solid var(--border-accent);
-  background-color: rgba(102, 126, 234, 0.05);
-  padding: 4px 10px;
-  font-size: 13px;
-}
-
-.view-controls .button:hover {
-  background-color: rgba(102, 126, 234, 0.1);
-}
-
-.view-controls .button.active {
-  background-color: rgba(102, 126, 234, 0.15);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  font-weight: 500;
+  background-color: rgba(40, 105, 131, 0.1);
 }
 
 /* 레이아웃 컨테이너 */
@@ -500,21 +498,21 @@ header {
 
 /* 저자 버튼 스타일 */
 .author-button {
-  background-color: rgba(102, 126, 234, 0.08); /* primary tint */
+  background-color: rgba(40, 105, 131, 0.08); /* primary tint */
   color: var(--primary-color);
-  border: 1px solid rgba(102, 126, 234, 0.25);
+  border: 1px solid rgba(40, 105, 131, 0.25);
 }
 
 .author-button:hover {
-  background-color: rgba(102, 126, 234, 0.12);
-  border-color: rgba(102, 126, 234, 0.35);
+  background-color: rgba(40, 105, 131, 0.12);
+  border-color: rgba(40, 105, 131, 0.35);
 }
 
 .author-button.active {
   background: var(--gradient-primary);
   color: white;
   border-color: var(--primary-color);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 2px 8px rgba(40, 105, 131, 0.25);
 }
 
 /* 키워드 버튼 스타일 */
@@ -572,15 +570,15 @@ header {
 @keyframes tagHighlight {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 0 rgba(40, 105, 131, 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 0 8px rgba(40, 105, 131, 0.6);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 0 rgba(40, 105, 131, 0.4);
   }
 }
 
@@ -600,13 +598,6 @@ main {
   gap: 30px;
   margin-top: 24px;
   align-items: flex-start;
-}
-
-/* 논문 컨테이너 - 리스트 뷰 */
-.paper-container.list-view {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 /* 논문 카드 - 그리드 뷰 */
@@ -697,7 +688,7 @@ main {
   margin-bottom: 20px;
   border-left: 3px solid var(--primary-color);
   padding-left: 12px;
-  background-color: rgba(102, 126, 234, 0.05);
+  background-color: rgba(40, 105, 131, 0.05);
   padding: 12px;
   border-radius: 6px;
 }
@@ -718,31 +709,6 @@ main {
   font-size: 14px;
   color: var(--primary-color);
   font-weight: 500;
-}
-
-/* 논문 카드 - 리스트 뷰 */
-.list-view .paper-card {
-  flex-direction: row;
-  align-items: center;
-  padding: 16px;
-  gap: 20px;
-}
-
-.list-view .paper-card-header {
-  padding: 0;
-  border-bottom: none;
-  flex: 1;
-}
-
-.list-view .paper-card-body {
-  padding: 0;
-  flex: 2;
-}
-
-.list-view .paper-card-footer {
-  margin-top: 0;
-  padding: 0;
-  flex: 0 0 auto;
 }
 
 /* 논문 상세 모달 */
@@ -1087,7 +1053,7 @@ main {
 
 .flatpickr-day.today {
   border: none !important;
-  background-color: rgba(102, 126, 234, 0.1) !important;
+  background-color: rgba(40, 105, 131, 0.1) !important;
   color: var(--primary-color) !important;
   font-weight: 600 !important;
 }
@@ -1123,7 +1089,7 @@ main {
 .flatpickr-day.today.inRange, 
 .flatpickr-day.prevMonthDay.today.inRange, 
 .flatpickr-day.nextMonthDay.today.inRange {
-  background: rgba(102, 126, 234, 0.15) !important;
+  background: rgba(40, 105, 131, 0.15) !important;
   border-color: transparent !important;
   color: var(--text-color) !important;
   box-shadow: none !important;
@@ -1144,7 +1110,7 @@ main {
 .flatpickr-day.prevMonthDay, 
 .flatpickr-day.nextMonthDay, 
 .flatpickr-day.notAllowed {
-  color: rgba(57, 57, 57, 0.3) !important;
+  color: rgba(87, 82, 121, 0.3) !important;
   background: transparent !important;
   cursor: not-allowed;
 }
@@ -1206,7 +1172,7 @@ input:checked + .toggle-slider {
 }
 
 input:focus + .toggle-slider {
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(102, 126, 234, 0.2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(40, 105, 131, 0.2);
 }
 
 input:checked + .toggle-slider:before {
@@ -1295,15 +1261,6 @@ input:checked + .toggle-slider:before {
     border-radius: 12px;
   }
   
-  .list-view .paper-card {
-    flex-direction: column;
-  }
-  
-  .list-view .paper-card-header,
-  .list-view .paper-card-body {
-    width: 100%;
-  }
-  
   .paper-modal-content {
     width: 95%;
     max-height: 85vh;
@@ -1372,7 +1329,7 @@ footer {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 2px 4px rgba(40, 105, 131, 0.2);
   position: absolute;
   top: -10px;
   left: -10px;
@@ -1387,7 +1344,7 @@ footer {
 }
 
 .paper-section {
-  background-color: rgba(102, 126, 234, 0.03);
+  background-color: rgba(40, 105, 131, 0.03);
   border-radius: var(--radius-sm);
   padding: 16px;
   border-left: 3px solid var(--primary-color);
@@ -1398,23 +1355,6 @@ footer {
   margin-bottom: 8px;
   color: var(--primary-color);
   font-size: 16px;
-}
-
-.original-abstract {
-  font-style: italic;
-  border-left: 3px solid var(--border-color);
-  padding-left: 16px;
-  color: var(--text-secondary);
-}
-
-/* 리스트 뷰에서 인덱스 표시 조정 */
-.list-view .paper-card-index {
-  position: relative;
-  top: auto;
-  left: auto;
-  margin-right: 12px;
-  margin-top: auto;
-  margin-bottom: auto;
 }
 
 /* 설정 모달 스타일 */
@@ -1528,7 +1468,7 @@ footer {
 .settings-input:focus {
   border-color: var(--primary-color);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 0 0 2px rgba(40, 105, 131, 0.2);
 }
 
 .settings-modal-footer {
@@ -1556,7 +1496,7 @@ footer {
 .selected-tags .category-tag {
   display: inline-flex;
   align-items: center;
-  background-color: rgba(102, 126, 234, 0.1);
+  background-color: rgba(40, 105, 131, 0.1);
   color: var(--primary-color);
   border-radius: 16px;
   padding: 4px 12px;
@@ -1567,7 +1507,7 @@ footer {
 }
 
 .selected-tags .category-tag:hover {
-  background-color: rgba(102, 126, 234, 0.2);
+  background-color: rgba(40, 105, 131, 0.2);
 }
 
 .range-selector {
@@ -1772,13 +1712,13 @@ footer {
 /* 하이라이트 애니메이션 효과 추가 */
 @keyframes highlightPulse {
   0% {
-    box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 0 1px rgba(40, 105, 131, 0.3);
   }
   50% {
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 2px rgba(40, 105, 131, 0.5);
   }
   100% {
-    box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 0 1px rgba(40, 105, 131, 0.3);
   }
 }
 
@@ -1846,11 +1786,6 @@ footer {
   100% {
     box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
   }
-}
-
-/* 일치 논문에 대한 리스트 뷰 특수 스타일 추가 */
-.list-view .paper-card.matched-paper {
-  border-left: 4px solid var(--gold-color);
 }
 
 /* 모바일 표시 효과 최적화 */
@@ -1948,13 +1883,6 @@ footer {
     transform: scale(1) rotate(0deg); 
     box-shadow: 0 2px 6px rgba(212, 175, 55, 0.5);
   }
-}
-
-.list-view .match-badge {
-  position: absolute;
-  top: -6px; 
-  right: -6px;
-  transform: none;
 }
 
 @media (max-width: 768px) {
@@ -2068,7 +1996,7 @@ footer {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 2px 4px rgba(40, 105, 131, 0.2);
   position: absolute;
   top: -12px;
   left: -12px;
@@ -2153,7 +2081,7 @@ footer {
 
 .back-to-top:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 12px 30px rgba(40, 105, 131, 0.2);
   background: var(--gradient-light);
 }
 
@@ -2196,9 +2124,9 @@ footer {
   display: inline-flex;
   align-items: center;
   padding: 4px 8px;
-  background-color: #f6f8fa;
-  color: #24292f;
-  border: 1px solid rgba(27, 31, 36, 0.15);
+  background-color: var(--background-hover);
+  color: var(--text-color);
+  border: 1px solid rgba(87, 82, 121, 0.2);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
@@ -2208,15 +2136,15 @@ footer {
 }
 
 .github-link:hover {
-  background-color: #f3f4f6;
+  background-color: var(--border-color);
   text-decoration: none;
-  border-color: rgba(27, 31, 36, 0.15);
+  border-color: rgba(87, 82, 121, 0.3);
 }
 
 .github-link.hot-repo {
   /* background-color: #fff8c5;  Removed yellow background */
-  border-color: rgba(27, 31, 36, 0.15);
-  color: #24292f;
+  border-color: rgba(87, 82, 121, 0.2);
+  color: var(--text-color);
 }
 
 .github-link.outdated-repo {
@@ -2225,7 +2153,7 @@ footer {
 
 .github-stars {
   margin-left: 4px;
-  color: #57606a;
+  color: var(--text-secondary);
 }
 
 .hot-icon {

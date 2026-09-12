@@ -1,31 +1,32 @@
-import os
-import json
-import sys
-import re
-import time
-import random
-import requests
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Optional
-import dotenv
 import argparse
-from tqdm import tqdm
+import json
+import os
+import random
+import re
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import dotenv
 import langchain_core.exceptions
-from langchain_openai import ChatOpenAI
+import requests
+from content_filter import is_sensitive
 from langchain.prompts import (
     ChatPromptTemplate,
-    SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
 )
-from structure import Structure
-from content_filter import is_sensitive
+from langchain_openai import ChatOpenAI
 from runtime import build_chat_openai_kwargs, raise_if_processing_failed
+from structure import Structure
+from tqdm import tqdm
 
 if os.path.exists(".env"):
     dotenv.load_dotenv()
-template = open("template.txt", "r", encoding="utf-8").read()
-system = open("system.txt", "r", encoding="utf-8").read()
+with open("template.txt", encoding="utf-8") as f:
+    template = f.read()
+with open("system.txt", encoding="utf-8") as f:
+    system = f.read()
 
 
 def parse_args():
@@ -57,8 +58,8 @@ def make_fallback_ai_fields(raw_summary: str) -> dict:
     }
 
 
-def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) -> Optional[Dict]:
-    def check_github_code(content: str) -> Dict:
+def process_single_item(chain, item: dict, language: str, max_retries: int = 2) -> dict | None:
+    def check_github_code(content: str) -> dict:
         """GitHub 링크 추출 및 검증"""
         code_info = {}
 
@@ -83,8 +84,8 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
                     data = resp.json()
                     code_info["code_stars"] = data.get("stargazers_count", 0)
                     code_info["code_last_update"] = data.get("pushed_at", "")[:10]
-            except Exception:
-                pass
+            except requests.RequestException:
+                pass  # GitHub stars are optional enrichment
             return code_info
 
         github_io_pattern = r"https?://[a-zA-Z0-9-_]+\.github\.io(?:/[a-zA-Z0-9-_\.]+)*"
@@ -125,13 +126,13 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
                     json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split("are not valid JSON")[0].strip()
                     json_str = json_str.replace("\\", "\\\\")
                     partial_data = json.loads(json_str)
-                except Exception as json_e:
+                except (ValueError, IndexError) as json_e:
                     print(f"Failed to parse JSON for {paper_id}: {json_e}", file=sys.stderr)
 
             item["AI"] = {**default_ai_fields, **partial_data}
             print(f"Using partial AI data for {paper_id}: {list(partial_data.keys())}", file=sys.stderr)
             break
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - langchain raises varied errors, retry guard must stay broad
             error_str = str(e)
             is_rate_limit = any(term in error_str.lower() for term in ["429", "rate limit", "quota", "resourceexhausted", "503", "high demand", "overloaded", "timeout"])
 
@@ -148,7 +149,7 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
     # 필수 필드 보장
     if "AI" not in item or not isinstance(item["AI"], dict):
         item["AI"] = default_ai_fields
-    for field in default_ai_fields.keys():
+    for field in default_ai_fields:
         if field not in item["AI"] or not item["AI"][field]:
             item["AI"][field] = default_ai_fields[field]
 
@@ -160,7 +161,7 @@ def process_single_item(chain, item: Dict, language: str, max_retries: int = 2) 
     return item
 
 
-def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
+def process_all_items(data: list[dict], model_name: str, language: str, max_workers: int) -> list[dict]:
     """모든 데이터 항목 처리 (속도 제한 및 지수 백오프 적용)"""
     base_url = os.environ.get("OPENAI_BASE_URL", "")
     api_key = os.environ.get("OPENAI_API_KEY", "") or os.environ.get("GEMINI_API_KEY", "")
@@ -190,7 +191,7 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
             try:
                 res = process_single_item(chain, item, language, max_retries=2)
                 processed_data[idx] = res
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - worker isolation, one item must not kill the batch
                 print(f"Item {idx} failed: {e}", file=sys.stderr)
                 processing_errors.append(str(e))
             time.sleep(1.5)
@@ -205,7 +206,7 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
                 try:
                     result = future.result()
                     processed_data[idx] = result
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - worker isolation, one item must not kill the batch
                     print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
                     processing_errors.append(str(e))
 

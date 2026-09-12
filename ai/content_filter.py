@@ -4,7 +4,6 @@ import sys
 
 import requests
 
-
 FILTER_URL = "https://spam.dw-dengwei.workers.dev"
 
 

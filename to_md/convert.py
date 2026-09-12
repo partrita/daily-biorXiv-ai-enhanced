@@ -1,5 +1,5 @@
-import json
 import argparse
+import json
 import os
 from itertools import count
 
@@ -9,7 +9,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = []
     preference = os.environ.get('CATEGORIES', 'q-bio.BM, q-bio.CB, q-bio.QM, cs.CV').split(',')
-    preference = list(map(lambda x: x.strip(), preference))
+    preference = [x.strip() for x in preference]
     def rank(cate):
         if cate in preference:
             return preference.index(cate)
@@ -20,16 +20,17 @@ if __name__ == "__main__":
         for line in f:
             data.append(json.loads(line))
 
-    categories = set([item["categories"][0] for item in data])
-    template = open("paper_template.md", "r").read()
+    categories = {item["categories"][0] for item in data}
+    with open("paper_template.md") as f:
+        template = f.read()
     categories = sorted(categories, key=rank)
     cnt = {cate: 0 for cate in categories}
     for item in data:
-        if item["categories"][0] not in cnt.keys():
+        if item["categories"][0] not in cnt:
             continue
         cnt[item["categories"][0]] += 1
 
-    markdown = f"<div id=toc></div>\n\n# Table of Contents\n\n"
+    markdown = "<div id=toc></div>\n\n# Table of Contents\n\n"
     for idx, cate in enumerate(categories):
         markdown += f"- [{cate}](#{cate}) [Total: {cnt[cate]}]\n"
 

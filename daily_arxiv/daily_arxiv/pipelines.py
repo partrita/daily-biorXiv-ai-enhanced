@@ -3,11 +3,8 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+
 import arxiv
-import json
-import os
-import sys
-from datetime import datetime, timedelta
 
 
 class DailyArxivPipeline:
@@ -40,7 +37,7 @@ class DailyArxivPipeline:
             item["categories"] = paper.categories
             item["comment"] = paper.comment
             item["summary"] = paper.summary
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - arxiv lib raises varied errors, item must still be returned
             spider.logger.warning(f"Failed to fetch metadata from arXiv API for {item['id']}: {e}")
 
         return item

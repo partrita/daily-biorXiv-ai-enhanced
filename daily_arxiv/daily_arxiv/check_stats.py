@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Scrapy 크롤링 통계 확인 스크립트 / Script to check Scrapy crawling statistics
 중복 제거 상태 결과 확인용 / Used to get deduplication check status results
@@ -9,9 +8,10 @@ Scrapy 크롤링 통계 확인 스크립트 / Script to check Scrapy crawling st
 - 중복 제거 결과에 따라 워크플로 계속 진행 여부 결정 / Decide workflow continuation based on deduplication results
 """
 import json
-import sys
 import os
-from datetime import datetime, timedelta
+import sys
+from datetime import UTC, datetime, timedelta
+
 
 def load_papers_data(file_path):
     """
@@ -38,7 +38,7 @@ def load_papers_data(file_path):
                     papers.append(data)
                     ids.add(data.get('id', ''))
         return papers, ids
-    except Exception as e:
+    except (OSError, ValueError) as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
         return [], set()
 
@@ -53,10 +53,9 @@ def save_papers_data(papers, file_path):
     """
     try:
         with open(file_path, 'w', encoding='utf-8') as f:
-            for paper in papers:
-                f.write(json.dumps(paper, ensure_ascii=False) + '\n')
+            f.writelines(json.dumps(paper, ensure_ascii=False) + '\n' for paper in papers)
         return True
-    except Exception as e:
+    except OSError as e:
         print(f"Error saving {file_path}: {e}", file=sys.stderr)
         return False
 
@@ -73,7 +72,7 @@ def perform_deduplication():
              - "error": 처리 오류 / Processing error
     """
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     today_file = f"../data/{today}.jsonl"
     history_days = 7  # 며칠 전 데이터까지 비교할지 설정
 
@@ -91,7 +90,7 @@ def perform_deduplication():
         # 과거 여러 날의 ID 집합 수집
         history_ids = set()
         for i in range(1, history_days + 1):
-            date_str = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+            date_str = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             history_file = f"../data/{date_str}.jsonl"
             _, past_ids = load_papers_data(history_file)
             history_ids.update(past_ids)
@@ -117,14 +116,14 @@ def perform_deduplication():
                 try:
                     os.remove(today_file)
                     print("모든 논문이 중복 내용이므로 오늘 파일 삭제됨 / All papers are duplicate content, today's file deleted", file=sys.stderr)
-                except Exception as e:
+                except OSError as e:
                     print(f"파일 삭제 실패: {e} / Failed to delete file: {e}", file=sys.stderr)
                 return "no_new_content"
         else:
             print("모든 내용이 신규 내용입니다 / All content is new", file=sys.stderr)
             return "has_new_content"
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - top-level guard, must return "error" not crash the workflow
         print(f"중복 제거 처리 실패: {e} / Deduplication processing failed: {e}", file=sys.stderr)
         return "error"
 

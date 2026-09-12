@@ -546,7 +546,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .selectAll("text")
         .style("text-anchor", "end")
         .style("font-size", "12px")
-        .style("fill", "#666")
+        .style("fill", "var(--text-secondary)")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
@@ -558,7 +558,7 @@ async function loadPapersByDateRange(startDate, endDate) {
           .ticks(5))
         .selectAll("text")
         .style("font-size", "12px")
-        .style("fill", "#666");
+        .style("fill", "var(--text-secondary)");
 
       // Y축 제목 추가
       svg.append("text")
@@ -567,7 +567,7 @@ async function loadPapersByDateRange(startDate, endDate) {
         .attr("x", 0 - (height / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .style("fill", "#666")
+        .style("fill", "var(--text-secondary)")
         .style("font-size", "12px")
         .text("Frequency");
 
@@ -588,14 +588,14 @@ async function loadPapersByDateRange(startDate, endDate) {
         svg.append("text")
           .attr("transform", `translate(${width/2}, ${height + margin.bottom - 5})`)
           .style("text-anchor", "middle")
-          .style("fill", "#666")
+          .style("fill", "var(--text-secondary)")
           .style("font-size", "12px")
           .text(xAxisTitle);
       }
 
       // 좌표축 선 굵게 설정
       svg.selectAll('.x-axis path, .y-axis path, .x-axis line, .y-axis line')
-        .style('stroke', '#666')
+        .style('stroke', 'var(--text-secondary)')
         .style('stroke-width', '1.5px');
 
       // 영역(Area) 생성기 정의

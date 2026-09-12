@@ -1,6 +1,5 @@
 let currentDate = '';
 let availableDates = [];
-let currentView = 'grid'; // 'grid' 또는 'list'
 let currentCategory = 'all';
 let urlCategoryParam = null; // URL 파라미터에서 가져온 category
 let urlJsonParam = null; // URL 파라미터에서 가져온 json (API 모드)
@@ -1086,7 +1085,7 @@ function formatAuthorsForCard(authorsString, authorTerms = []) {
 function renderPapers() {
   const container = document.getElementById('paperContainer');
   container.innerHTML = '';
-  container.className = `paper-container ${currentView === 'list' ? 'list-view' : ''}`;
+  container.className = `paper-container`;
   
   let papers = [];
   if (currentCategory === 'all') {
@@ -1241,84 +1240,6 @@ function renderPapers() {
     }
   }
   
-  // 키워드 및 저자 일치(필터링 없이 정렬만 수행)
-  if (activeKeywords.length > 0 || activeAuthors.length > 0) {
-    // 논문 정렬: 일치하는 논문을 앞쪽에 배치
-    filteredPapers.sort((a, b) => {
-      const aMatchesKeyword = activeKeywords.length > 0 ? 
-        activeKeywords.some(keyword => {
-          // 제목과 초록에서만 키워드 검색
-          const searchText = `${a.title} ${a.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const aMatchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          // 저자 목록에서만 저자명 검색
-          return a.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-        
-      const bMatchesKeyword = activeKeywords.length > 0 ?
-        activeKeywords.some(keyword => {
-          // 제목과 초록에서만 키워드 검색
-          const searchText = `${b.title} ${b.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const bMatchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          // 저자 목록에서만 저자명 검색
-          return b.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-      
-      // a와 b의 일치 상태 (키워드 또는 저자 일치 포함)
-      const aMatches = aMatchesKeyword || aMatchesAuthor;
-      const bMatches = bMatchesKeyword || bMatchesAuthor;
-      
-      if (aMatches && !bMatches) return -1;
-      if (!aMatches && bMatches) return 1;
-      return 0;
-    });
-    
-    // 일치하는 논문 마킹
-    filteredPapers.forEach(paper => {
-      const matchesKeyword = activeKeywords.length > 0 ?
-        activeKeywords.some(keyword => {
-          const searchText = `${paper.title} ${paper.summary}`.toLowerCase();
-          return searchText.includes(keyword.toLowerCase());
-        }) : false;
-        
-      const matchesAuthor = activeAuthors.length > 0 ?
-        activeAuthors.some(author => {
-          return paper.authors.toLowerCase().includes(author.toLowerCase());
-        }) : false;
-        
-      // 일치 마크 추가 (전체 논문 카드 하이라이트용)
-      paper.isMatched = matchesKeyword || matchesAuthor;
-      
-      // 일치 사유 추가 (일치 안내 툴팁 표시용)
-      if (paper.isMatched) {
-        paper.matchReason = [];
-        if (matchesKeyword) {
-          const matchedKeywords = activeKeywords.filter(keyword => 
-            `${paper.title} ${paper.summary}`.toLowerCase().includes(keyword.toLowerCase())
-          );
-          if (matchedKeywords.length > 0) {
-            paper.matchReason.push(`키워드: ${matchedKeywords.join(', ')}`);
-          }
-        }
-        if (matchesAuthor) {
-          const matchedAuthors = activeAuthors.filter(author => 
-            paper.authors.toLowerCase().includes(author.toLowerCase())
-          );
-          if (matchedAuthors.length > 0) {
-            paper.matchReason.push(`저자: ${matchedAuthors.join(', ')}`);
-          }
-        }
-      }
-    });
-  }
-  
   // 방향키 내비게이션용 현재 필터링된 논문 목록 저장
   currentFilteredPapers = [...filteredPapers];
   
@@ -1370,23 +1291,6 @@ function renderPapers() {
     
     // 저자 목록 서식 지정 (생략 규칙 및 하이라이트 적용)
     const formattedAuthors = formatAuthorsForCard(paper.authors, authorTerms);
-    
-    // GitHub 버튼 HTML 생성
-    // let githubHtml = '';
-    // if (paper.code_url) {
-    //   const stars = paper.code_stars ? `<span class="github-stars">★ ${paper.code_stars}</span>` : '';
-    //   const isHot = paper.code_stars > 100;
-      
-    //   githubHtml = `
-    //     <a href="${paper.code_url}" target="_blank" class="github-link" title="View Code" onclick="event.stopPropagation()">
-    //       <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: text-bottom; margin-right: 4px;">
-    //         <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-    //       </svg>
-    //       Code ${stars}
-    //       ${isHot ? '<span class="hot-icon">🔥</span>' : ''}
-    //     </a>
-    //   `;
-    // }
 
     paperCard.innerHTML = `
       <div class="paper-card-index">${index + 1}</div>
@@ -1422,9 +1326,6 @@ function showPaperDetails(paper, paperIndex) {
   const modal = document.getElementById('paperModal');
   const modalTitle = document.getElementById('modalTitle');
   const modalBody = document.getElementById('modalBody');
-  const paperLink = document.getElementById('paperLink');
-  const pdfLink = document.getElementById('pdfLink');
-  const htmlLink = document.getElementById('htmlLink');
   
   // 모달 스크롤 위치 초기화
   modalBody.scrollTop = 0;
@@ -1440,8 +1341,6 @@ function showPaperDetails(paper, paperIndex) {
   
   // 제목 앞에 인덱스 번호 추가
   modalTitle.innerHTML = paperIndex ? `<span class="paper-index-badge">${paperIndex}</span> ${highlightedTitle}` : highlightedTitle;
-  
-  const abstractText = paper.details || '';
   
   const categoryDisplay = paper.allCategories ? 
     paper.allCategories.join(', ') : 
@@ -1460,11 +1359,6 @@ function showPaperDetails(paper, paperIndex) {
     ? highlightMatches(paper.summary, modalTitleTerms, 'keyword-highlight') 
     : paper.summary;
   
-  // 상세 내용 하이라이트 (Abstract/details)
-  const highlightedAbstract = modalTitleTerms.length > 0 
-    ? highlightMatches(abstractText, modalTitleTerms, 'keyword-highlight') 
-    : abstractText;
-  
   // 기타 부분 하이라이트 (존재하고 초록의 일부인 경우)
   const highlightedMotivation = paper.motivation && modalTitleTerms.length > 0 
     ? highlightMatches(paper.motivation, modalTitleTerms, 'keyword-highlight') 
@@ -1481,9 +1375,6 @@ function showPaperDetails(paper, paperIndex) {
   const highlightedConclusion = paper.conclusion && modalTitleTerms.length > 0 
     ? highlightMatches(paper.conclusion, modalTitleTerms, 'keyword-highlight') 
     : paper.conclusion;
-  
-  // 하이라이트 설명 표시 여부 판단
-  const showHighlightLegend = activeKeywords.length > 0 || activeAuthors.length > 0;
   
   // 일치 마크 추가
   const matchedPaperClass = paper.isMatched ? 'matched-paper-details' : '';
@@ -1503,13 +1394,6 @@ function showPaperDetails(paper, paperIndex) {
         ${paper.method ? `<div class="paper-section"><h4>Method</h4><p>${highlightedMethod}</p></div>` : ''}
         ${paper.result ? `<div class="paper-section"><h4>Result</h4><p>${highlightedResult}</p></div>` : ''}
         ${paper.conclusion ? `<div class="paper-section"><h4>Conclusion</h4><p>${highlightedConclusion}</p></div>` : ''}
-      </div>
-      
-      ${highlightedAbstract ? `<h3>Abstract</h3><p class="original-abstract">${highlightedAbstract}</p>` : ''}
-      
-      <div>
-        <h3>Full Text</h3>
-        <p><a href="${paper.pdf || paper.url}" target="_blank" rel="noopener">PDF 열기 (새 창)</a> · <a href="${paper.url}" target="_blank" rel="noopener">bioRxiv 페이지 열기 (새 창)</a></p>
       </div>
     </div>
   `;
@@ -1575,7 +1459,6 @@ function navigateToNextPaper() {
 function showRandomPaper() {
   // 사용 가능한 논문이 있는지 확인
   if (currentFilteredPapers.length === 0) {
-    console.log('No papers available to show random paper');
     return;
   }
   
@@ -1591,8 +1474,6 @@ function showRandomPaper() {
   
   // 무작위 논문 인디케이터 표시
   showRandomPaperIndicator();
-  
-  console.log(`Showing random paper: ${randomIndex + 1}/${currentFilteredPapers.length}`);
 }
 
 // 무작위 논문 인디케이터 표시
@@ -1633,11 +1514,6 @@ function toggleDatePicker() {
   } else {
     document.body.style.overflow = '';
   }
-}
-
-function toggleView() {
-  currentView = currentView === 'grid' ? 'list' : 'grid';
-  document.getElementById('paperContainer').classList.toggle('list-view', currentView === 'list');
 }
 
 function formatDate(dateString) {
@@ -1736,20 +1612,6 @@ async function loadPapersByDateRange(startDate, endDate) {
   }
 }
 
-// 모든 활성 키워드 지우기
-function clearAllKeywords() {
-  activeKeywords = [];
-  // renderKeywordTags();
-  // 논문 목록 다시 렌더링, 키워드 일치 하이라이트 및 우선 정렬 제거
-  renderPapers();
-}
 
-// 모든 저자 필터 지우기
-function clearAllAuthors() {
-  activeAuthors = [];
-  renderFilterTags();
-  // 논문 목록 다시 렌더링, 저자 일치 하이라이트 및 우선 정렬 제거
-  renderPapers();
-}
 
 

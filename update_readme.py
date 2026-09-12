@@ -2,10 +2,12 @@ import os
 from os.path import join
 
 if __name__ == '__main__':
-    template = open('template.md', 'r').read()
+    with open('template.md') as f:
+        template = f.read()
     data = sorted(os.listdir('data'), reverse=True)
 
-    readme_content_template = open('readme_content_template.md', 'r').read()
+    with open('readme_content_template.md') as f:
+        readme_content_template = f.read()
     readme_content = "\n\n".join(
         [readme_content_template.format(date=item.replace('.md', ''),url=join('data', item)) for item in data if item.endswith('.md')]
     )
