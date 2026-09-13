@@ -322,7 +322,8 @@ jobs:
         
         mkdir -p data assets
         cp -r /tmp/data_files/data/* data/ 2>/dev/null || true
-        cp /tmp/data_files/assets/file-list.txt assets/ 2>/dev/null || true
+        # ponytail: regenerate from merged data/ so history accumulates; single-day copy truncates file-list
+        ls data/*.jsonl | sed 's|data/||' > assets/file-list.txt
         
         git add data/* 2>/dev/null || true
         git add assets/file-list.txt 2>/dev/null || true
